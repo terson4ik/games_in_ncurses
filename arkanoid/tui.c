@@ -17,6 +17,13 @@ void sleep_frame(enum delays delay)
     usleep(delay);
 }
 
+void update_stats(unsigned int score)
+{
+    attrset(A_REVERSE);
+    mvprintw(0, 0, "score:%u    ", score);
+    attroff(A_REVERSE);
+}
+
 enum api_keys get_key(void)
 {
     switch (getch()) {
@@ -70,7 +77,7 @@ void draw_rect(const rectangle *r, int chr, enum game_colors_pair pair)
 
 void set_pause_until_not_pressed(void)
 {
-    timeout(game_pause);
+    timeout(DELAY_STOP);
     getch();
     timeout(0);
 }
@@ -102,8 +109,8 @@ static void init_game_pairs(void)
     init_pair(PADDLE_PAIR, COLOR_GREEN,   COLOR_GREEN);
     init_pair(BORDER_PAIR, COLOR_YELLOW,  COLOR_YELLOW);
     init_pair(BG_PAIR,     COLOR_CYAN,    COLOR_CYAN);
-    init_pair(WIN_PAIR,    COLOR_GREEN,   COLOR_GREEN);
-    init_pair(LOSE_PAIR,   COLOR_RED,     COLOR_RED);
+    init_pair(WIN_PAIR,    COLOR_BLACK,   COLOR_GREEN);
+    init_pair(LOSE_PAIR,   COLOR_BLACK,     COLOR_RED);
     
     init_pair(BLOCK_PAIR_1,  COLOR_MAGENTA, COLOR_MAGENTA);
     init_pair(BLOCK_PAIR_2,  COLOR_GREEN, COLOR_GREEN);
@@ -148,6 +155,41 @@ void input_flush(void)
 {
     while (getch() != ERR)
         ;
+}
+
+int end_game(enum win_state is_win, point *max_xy, unsigned int score)
+{
+    int key, x, y;
+    rectangle pseudo_rect;
+    pseudo_rect.up_left.x = 0;
+    pseudo_rect.up_left.y = 0;
+    pseudo_rect.down_right.x = max_xy->x;
+    pseudo_rect.down_right.y = max_xy->y;
+    x = (max_xy->x-AREA_WIDTH-2)/2;
+    y = max_xy->y/2;
+    clear();
+    attrset(A_REVERSE | A_BOLD);
+    if (is_win == WIN) {
+        draw_rect(&pseudo_rect, ' ', WIN_PAIR);
+        mvaddstr(y, x, "WOW!!!");
+        mvaddstr(y + 1, x, "YOU WIN! :)");
+    } else {
+        draw_rect(&pseudo_rect, ' ', LOSE_PAIR);
+        mvaddstr(y, x, "WE ARE SORRY.");
+        mvaddstr(y + 1, x, "YOU LOSER :(");
+    }
+    mvprintw(y + 2, x, "YOUR SCORE: %u", score);
+    attrset(A_BLINK | A_UNDERLINE | A_BOLD);
+    mvaddstr(y + 3, x, "TYPE ENTER TO CONTINUE. . .");
+    refresh();
+    timeout(DELAY_STOP);
+    key = ERR;
+    while ((key = getch()) != KEY_ENTER)
+        if (key == KEY_RESIZE) {
+            getmaxyx(stdscr, max_xy->y, max_xy->x);
+            end_game(is_win, max_xy, score);
+            break;
+        }
 }
 
 void terminate_game(void)

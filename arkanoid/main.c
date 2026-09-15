@@ -5,7 +5,93 @@
 #include "tui.h"
 
 enum sides { LEFT = -1, RIGHT = +1 };
-enum win_state { WIN = 1, LOSE = -1, UNKOWN = 0 };
+
+
+static void move_paddle(paddle *pad, const rectangle *cup, enum sides side);
+static void spawn_blocks(block *blocks);
+static int safety_resize(paddle *pad, ball *ba, block *blocks,
+                                point *field, rectangle *cup);
+
+#define SAFE_RESIZE_MACRO() \
+    if (!safety_resize(pad, pill, blocks, &game_size, &cup)){ \
+        objects_erase(pad, pill, blocks); \
+        terminate_game(); \
+        fprintf(stderr, "You broke this game. min size %d\n", MIN_TERM_SIZE); \
+        return 3; \
+    }
+int main(void)
+{
+    point game_size;
+    rectangle cup, *callback_rect_block;
+    block *blocks;
+    paddle *pad;
+    ball *pill;
+    enum delays delay;
+    enum api_keys key;
+    enum win_state is_win;
+    unsigned int score = 0;
+
+    if(!init_game(&game_size, &cup, &delay)) {
+        terminate_game();
+        fprintf(stderr, "Size must be greater then %d\n", MIN_TERM_SIZE);
+        return 1;
+    }
+    if (!objects_init(&pad, &pill, &blocks, &cup)) {
+        objects_erase(pad, pill, blocks);
+        terminate_game();
+        fputs("RAM is too small. Clear you RAM\n", stderr);
+        return 2;
+    }
+    SAFE_RESIZE_MACRO();
+
+    is_win = UNKOWN;
+    update_stats(score);
+    while ((key = get_key()) != quit) {
+        switch (key) {
+        case to_left:    move_paddle(pad, &cup, LEFT);  break;
+        case to_right:   move_paddle(pad, &cup, RIGHT); break;
+        case game_pause:
+            input_flush();
+            set_pause_until_not_pressed();
+            break;
+        case quit:       break;
+        case resize: 
+            while ((key = get_key()) == resize)
+                ; /* get final size and call resize */
+            SAFE_RESIZE_MACRO();
+        case no_key: break;
+        }
+
+        input_flush();
+        sleep_frame(delay);
+
+        draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY, BG_PAIR);
+        switch (ball_move(pill, pad, blocks, &cup, &callback_rect_block)) {
+        case hit:
+            draw_rect(callback_rect_block, CHR_EMPTY, BG_PAIR);
+            if (block_all_destroyed(blocks)) {
+                is_win = WIN;
+                end_game(is_win, &game_size, score);
+            }
+            score += 16;
+            update_stats(score);
+            break;
+        case lose:
+            is_win = LOSE;
+            end_game(is_win, &game_size, score);
+            break;
+        case nothing: break;
+        }
+        if (is_win == UNKOWN)
+            draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
+        else
+            break;
+    }
+
+    terminate_game();
+    objects_erase(pad, pill, blocks);
+    return 0;
+}
 
 static void move_paddle(paddle *pad, const rectangle *cup, enum sides side)
 {
@@ -38,71 +124,4 @@ static int safety_resize(paddle *pad, ball *ba, block *blocks,
     spawn_blocks(blocks);
 
     return 1;
-}
-
-#define SAFE_RESIZE_MACRO() if (!safety_resize(pad, pill, blocks, &game_size, &cup)){ \
-        objects_erase(pad, pill, blocks); \
-        terminate_game(); \
-        fprintf(stderr, "You broke this game. min size %d\n", MIN_TERM_SIZE); \
-        return 3; \
-    }
-int main(void)
-{
-    point game_size;
-    rectangle cup, *callback_rect_block;
-    block *blocks;
-    paddle *pad;
-    ball *pill;
-    enum delays delay;
-    enum api_keys key;
-    enum win_state is_win;
-    unsigned int score;
-
-    if(!init_game(&game_size, &cup, &delay)) {
-        terminate_game();
-        fprintf(stderr, "Size must be greater then %d\n", MIN_TERM_SIZE);
-        return 1;
-    }
-    if (!objects_init(&pad, &pill, &blocks, &cup)) {
-        objects_erase(pad, pill, blocks);
-        terminate_game();
-        fputs("RAM is too small. Clear you RAM\n", stderr);
-        return 2;
-    }
-    SAFE_RESIZE_MACRO();
-
-    is_win = UNKOWN;
-    while ((key = get_key()) != quit && is_win == UNKOWN) {
-        switch (key) {
-        case to_left:    move_paddle(pad, &cup, LEFT);  break;
-        case to_right:   move_paddle(pad, &cup, RIGHT); break;
-        case game_pause: set_pause_until_not_pressed(); break;
-        case resize: 
-            while ((key = get_key()) == resize)
-                ; /* get final size and call resize */
-            SAFE_RESIZE_MACRO();
-        }
-
-        input_flush();
-        sleep_frame(delay);
-
-        draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY, BG_PAIR);
-        switch (ball_move(pill, pad, blocks, &cup, &callback_rect_block)) {
-        case hit:
-            draw_rect(callback_rect_block, CHR_EMPTY, BG_PAIR);
-            if (block_all_destroyed(blocks))
-                is_win = WIN;
-            break;
-        case lose:
-            is_win = LOSE;
-            break;
-        case nothing:
-        }
-
-        draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
-    }
-
-    terminate_game();
-    objects_erase(pad, pill, blocks);
-    return 0;
 }
