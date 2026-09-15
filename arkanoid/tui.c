@@ -41,9 +41,23 @@ enum api_keys get_key(void)
     }
 }
 
-void draw_rect(const rectangle *r, int chr)
+void draw_bg(const rectangle *cup, enum game_colors_pair pair)
+{
+    rectangle target_rect = *cup;
+    target_rect.up_left.x++;
+    target_rect.down_right.x--;
+    target_rect.down_right.y--;
+    draw_rect(&target_rect, ' ', pair);
+}
+
+void draw_rect(const rectangle *r, int chr, enum game_colors_pair pair)
 {
     int x, y;
+        if (has_colors())
+        attrset(COLOR_PAIR(pair));
+    else
+        attrset(A_BOLD);
+
     for (x = r->up_left.x; x <= r->down_right.x; x++)
         for(y = r->up_left.y; y <=r->down_right.y; y++)
             mvaddch(y, x, chr);
@@ -57,9 +71,14 @@ void set_pause_until_not_pressed(void)
     timeout(0);
 }
 
-void draw_contour(const rectangle *r, int chr)
+void draw_contour(const rectangle *r, int chr, enum game_colors_pair pair)
 {
     int x, y;
+    if (has_colors())
+        attrset(COLOR_PAIR(pair));
+    else
+        attrset(A_REVERSE | A_BOLD);
+
     /* walls */
     for (y = r->up_left.y; y <= r->down_right.y; y++) {
         mvaddch(y, r->up_left.x, chr);
@@ -73,10 +92,23 @@ void draw_contour(const rectangle *r, int chr)
     refresh();
 }
 
+static void init_game_pairs(void) 
+{
+    init_pair(BALL_PAIR,   COLOR_RED,     COLOR_RED);
+    init_pair(PADDLE_PAIR, COLOR_GREEN,   COLOR_GREEN);
+    init_pair(BORDER_PAIR, COLOR_YELLOW,  COLOR_YELLOW);
+    init_pair(BLOCK_PAIR,  COLOR_MAGENTA, COLOR_MAGENTA);
+    init_pair(BG_PAIR,     COLOR_CYAN,    COLOR_CYAN);
+    init_pair(WIN_PAIR,    COLOR_GREEN,   COLOR_GREEN);
+    init_pair(LOSE_PAIR,   COLOR_RED,     COLOR_RED);
+}
+
 int init_game(point *field, rectangle *cup, enum delays *delay)
 {
     initscr();
     start_color();
+    if (has_colors())
+        init_game_pairs();
     cbreak();
     curs_set(0);
     noecho();

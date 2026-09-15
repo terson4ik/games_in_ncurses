@@ -14,8 +14,9 @@ enum delays { SECOND = 1000000,
 int init_game(point *field, rectangle *cup, enum delays *delay);
 void terminate_game(void);
 enum api_keys get_key(void);
-void draw_rect(const rectangle *r, int chr);
-void draw_contour(const rectangle *r, int chr);
+void draw_rect(const rectangle *r, int chr, enum game_colors_pair pair);
+void draw_contour(const rectangle *r, int chr, enum game_colors_pair pair);
+void draw_bg(const rectangle *cup, enum game_colors_pair pair);
 void set_pause_until_not_pressed(void);
 void input_flush(void);
 void sleep_frame(enum delays delay);

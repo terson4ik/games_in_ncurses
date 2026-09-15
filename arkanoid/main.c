@@ -8,16 +8,17 @@ enum win_state { WIN = 1, LOSE = -1, UNKOWN = 0 };
 
 static void move_paddle(paddle *pad, const rectangle *cup, enum sides side)
 {
-    draw_rect(paddle_get_ptr_rect(pad), CHR_EMPTY);
+    draw_rect(paddle_get_ptr_rect(pad), CHR_EMPTY, BG_PAIR);
     paddle_move(pad, cup, side);
-    draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE);
+    draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE, PADDLE_PAIR);
 }
+
 static void spawn_blocks(block *blocks)
 {
     int col, row;
     for (row = 0; row < BLOCK_ROWS; row++)
         for (col = 0; col < BLOCK_COLS; col++)
-            draw_rect(blocks_get_ptr_rect(blocks, row, col), CHR_BLOCK);
+            draw_rect(blocks_get_ptr_rect(blocks, row, col), CHR_BLOCK, BLOCK_PAIR);
 }
 
 int main(void)
@@ -42,31 +43,27 @@ int main(void)
         fputs("RAM is too small. Clear you RAM\n", stderr);
         return 2;
     }
-    draw_contour(&cup, CHR_BOUNDS);
-    draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE);
-    draw_rect(ball_get_ptr_rect(pill), CHR_BALL);
+    draw_contour(&cup, CHR_BOUNDS, BORDER_PAIR);
+    draw_bg(&cup, BG_PAIR);
+    draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE, PADDLE_PAIR);
+    draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
     spawn_blocks(blocks);
 
     is_win = UNKOWN;
     while ((key = get_key()) != quit && is_win == UNKOWN) {
         switch (key) {
-        case to_left:
-            move_paddle(pad, &cup, LEFT);
-            break;
-        case to_right:
-            move_paddle(pad, &cup, RIGHT);
-            break;
-        case game_pause:
-            set_pause_until_not_pressed();
-            break;
+        case to_left:    move_paddle(pad, &cup, LEFT);  break;
+        case to_right:   move_paddle(pad, &cup, RIGHT); break;
+        case game_pause: set_pause_until_not_pressed(); break;
         }
+
         input_flush();
         sleep_frame(delay);
 
-        draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY);
+        draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY, BG_PAIR);
         switch (ball_move(pill, pad, blocks, &cup, &callback_rect_block)) {
         case hit:
-            draw_rect(callback_rect_block, CHR_EMPTY);
+            draw_rect(callback_rect_block, CHR_EMPTY, BG_PAIR);
             if (block_all_destroyed(blocks))
                 is_win = WIN;
             break;
@@ -76,7 +73,7 @@ int main(void)
         case nothing:
         }
 
-        draw_rect(ball_get_ptr_rect(pill), CHR_BALL);
+        draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
     }
 
     terminate_game();
