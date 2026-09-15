@@ -1,5 +1,4 @@
-#include <stdlib.h> /* malloc & free */
-#include <time.h> /* use in init ball */
+#include <stdlib.h> /* malloc & free; use rand() in init ball */
 #include "arkanoid.h"
 
 #define DOWN +1
@@ -20,6 +19,27 @@ struct block_tag {
     char is_die;
 };
 /* typedefs in header file */
+void rebuild_entries(paddle *pad, ball *ba, block *blocks,
+                                        const rectangle *cup)
+{
+    int col, row;
+    pad->cur_r.up_left.x = ((cup->up_left.x + cup->down_right.x) / 2) - 1;
+    pad->cur_r.down_right.x = pad->cur_r.up_left.x + PADDLE_LEN;
+    pad->cur_r.up_left.y = pad->cur_r.down_right.y = cup->down_right.y - 1;
+    
+    ba->pos.x = pad->cur_r.up_left.x + 2;
+    ba->pos.y = cup->down_right.y / 2;
+    ba->vector.x = (rand() % 2 == 0) ? LEFT : RIGHT;
+    ba->vector.y = DOWN;
+    for (row = 0; row < BLOCK_ROWS; row++)
+    for (col = 0; col < BLOCK_COLS; col++) {
+        int ind = (row * BLOCK_COLS + col);
+        blocks[ind].rect.up_left.x =cup->up_left.x+(col*BLOCK_WIDTH)+1;
+        blocks[ind].rect.up_left.y = cup->up_left.y+(row*BLOCK_HEIGHT);
+        blocks[ind].rect.down_right.x = blocks[ind].rect.up_left.x + BLOCK_WIDTH-1;
+        blocks[ind].rect.down_right.y = blocks[ind].rect.up_left.y + BLOCK_HEIGHT-1;            
+    }
+}
 
 int objects_init(paddle **p_paddle, ball **p_ball, block **p_blocks,
                                             const rectangle *cup)
@@ -31,25 +51,11 @@ int objects_init(paddle **p_paddle, ball **p_ball, block **p_blocks,
     *p_blocks = malloc(sizeof(block) * BLOCK_COLS * BLOCK_ROWS);
     if (!*p_ball || !*p_paddle || !*p_blocks)
         return 0;
-
-    (*p_paddle)->cur_r.up_left.x = ((cup->up_left.x + cup->down_right.x) / 2) - 1;
-    (*p_paddle)->cur_r.down_right.x = (*p_paddle)->cur_r.up_left.x + PADDLE_LEN;
-    (*p_paddle)->cur_r.up_left.y = (*p_paddle)->cur_r.down_right.y = cup->down_right.y - 1;
-    
-    (*p_ball)->pos.x = (*p_paddle)->cur_r.up_left.x + 2;
-    (*p_ball)->pos.y = cup->down_right.y / 2;
-    (*p_ball)->vector.x = (time(NULL) % 2 == 0) ? LEFT : RIGHT;
-    (*p_ball)->vector.y = DOWN;
+    rebuild_entries(*p_paddle, *p_ball, *p_blocks, cup);
 
     for (row = 0; row < BLOCK_ROWS; row++)
-        for (col = 0; col < BLOCK_COLS; col++) {
-            int ind = (row * BLOCK_COLS + col);
-            (*p_blocks)[ind].is_die = 0;
-            (*p_blocks)[ind].rect.up_left.x =cup->up_left.x+(col*BLOCK_WIDTH)+1;
-            (*p_blocks)[ind].rect.up_left.y = cup->up_left.y+(row*BLOCK_HEIGHT);
-            (*p_blocks)[ind].rect.down_right.x = (*p_blocks)[ind].rect.up_left.x + BLOCK_WIDTH-1;
-            (*p_blocks)[ind].rect.down_right.y = (*p_blocks)[ind].rect.up_left.y + BLOCK_HEIGHT-1;            
-        }
+        for (col = 0; col < BLOCK_COLS; col++)
+            (*p_blocks)[row * BLOCK_COLS + col].is_die = 0;
     return 1;
 }
 
@@ -142,9 +148,14 @@ int block_all_destroyed(block *blks)
     int col, row;
     for (row = 0; row < BLOCK_ROWS; row++)
         for (col = 0; col < BLOCK_COLS; col++)
-            if(blks[row * BLOCK_COLS + col].is_die == 0)
+            if(block_is_live(blks, row, col))
                 return 0;
     return 1;
+}
+
+int block_is_live(const block *blocks, int row, int col)
+{
+    return blocks[row * BLOCK_COLS + col].is_die == 0;
 }
 
 void objects_erase(paddle *p_paddle, ball *p_ball, block *p_blocks)

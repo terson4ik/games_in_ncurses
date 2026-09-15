@@ -5,10 +5,11 @@
 #include "tui_conf.h"
 #include "arkanoid_conf.h"
 
-enum api_keys { quit, to_left, to_right, game_pause, no_key };
+#define BLOK_PAIRS_COUNT 4
+enum api_keys { quit, to_left, to_right, game_pause, resize, no_key };
 enum delays { SECOND = 1000000, 
-              DELAY_EASY = SECOND/10, DELAY_NORM = SECOND/10, 
-              DELAY_HARD = SECOND/1000, DELAY_STOP = -1 
+              DELAY_EASY = SECOND/1, DELAY_NORM = SECOND/10, 
+              DELAY_HARD = SECOND/100, DELAY_STOP = -1 
 };
 
 int init_game(point *field, rectangle *cup, enum delays *delay);
@@ -20,5 +21,6 @@ void draw_bg(const rectangle *cup, enum game_colors_pair pair);
 void set_pause_until_not_pressed(void);
 void input_flush(void);
 void sleep_frame(enum delays delay);
+int handle_resize(point *field, rectangle *cup);
 
 #endif

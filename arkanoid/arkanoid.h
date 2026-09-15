@@ -12,6 +12,8 @@ enum ball_act { hit, lose, nothing };
 
 int objects_init(paddle **p_paddle, ball **p_ball, block **p_blocks,
                                         const rectangle *cup);
+void rebuild_entries(paddle *p_paddle, ball *p_ball, block *p_blocks,
+                                        const rectangle *cup);
 void objects_erase(paddle *p_paddle, ball *p_ball, block *p_blocks);
 
 void paddle_move(paddle *pad, const rectangle *cup, int dx);
@@ -24,5 +26,6 @@ int block_all_destroyed(block *blks);
 rectangle *paddle_get_ptr_rect(const paddle *p);
 rectangle *ball_get_ptr_rect(const ball *b);
 rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col);
+int block_is_live(const block *blocks, int row, int col);
 
 #endif

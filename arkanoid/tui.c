@@ -1,4 +1,6 @@
 #include "tui.h"
+#include <stdlib.h>
+#include <time.h>
 #include <unistd.h> /* usleep(); timeout too bad for rendering frames */
 #include <curses.h>
 
@@ -36,6 +38,8 @@ enum api_keys get_key(void)
     case KEY_SPACE:
         return game_pause;
 
+    case KEY_RESIZE:
+        return resize;
     default:
         return no_key;
     }
@@ -97,10 +101,27 @@ static void init_game_pairs(void)
     init_pair(BALL_PAIR,   COLOR_RED,     COLOR_RED);
     init_pair(PADDLE_PAIR, COLOR_GREEN,   COLOR_GREEN);
     init_pair(BORDER_PAIR, COLOR_YELLOW,  COLOR_YELLOW);
-    init_pair(BLOCK_PAIR,  COLOR_MAGENTA, COLOR_MAGENTA);
     init_pair(BG_PAIR,     COLOR_CYAN,    COLOR_CYAN);
     init_pair(WIN_PAIR,    COLOR_GREEN,   COLOR_GREEN);
     init_pair(LOSE_PAIR,   COLOR_RED,     COLOR_RED);
+    
+    init_pair(BLOCK_PAIR_1,  COLOR_MAGENTA, COLOR_MAGENTA);
+    init_pair(BLOCK_PAIR_2,  COLOR_GREEN, COLOR_GREEN);
+    init_pair(BLOCK_PAIR_3,  COLOR_WHITE, COLOR_WHITE);
+    init_pair(BLOCK_PAIR_4,  COLOR_BLUE, COLOR_BLUE);
+}
+
+int handle_resize(point *field, rectangle *cup)
+{
+    clear();
+    getmaxyx(stdscr, field->y, field->x);
+    if (field->x < MIN_TERM_SIZE || field->y < MIN_TERM_SIZE)
+        return 0;
+
+    cup->up_left.x = ((field->x-AREA_WIDTH) / 2)-1;
+    cup->up_left.y = 0;
+    cup->down_right.x = cup->up_left.x + AREA_WIDTH+1;
+    cup->down_right.y = cup->up_left.y + AREA_HEIGHT+1;
 }
 
 int init_game(point *field, rectangle *cup, enum delays *delay)
@@ -115,17 +136,14 @@ int init_game(point *field, rectangle *cup, enum delays *delay)
     keypad(stdscr, 1);
     *delay = DELAY_NORM; /* TODO: gived in tui */
     timeout(0);
-    getmaxyx(stdscr, field->y, field->x);
-    if (field->x < MIN_TERM_SIZE || field->y < MIN_TERM_SIZE)
+    srand(time(NULL));
+    if (!handle_resize(field, cup))
         return 0;
 
-    cup->up_left.x = ((field->x-AREA_WIDTH) / 2)-1;
-    cup->up_left.y = 0;
-    cup->down_right.x = cup->up_left.x + AREA_WIDTH+1;
-    cup->down_right.y = cup->up_left.y + AREA_HEIGHT+1;
     /* calc cup */
     return 1;
 }
+
 void input_flush(void)
 {
     while (getch() != ERR)
