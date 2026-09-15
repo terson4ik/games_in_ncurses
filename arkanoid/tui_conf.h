@@ -5,6 +5,6 @@
 #define CHR_PADDLE  '='
 #define CHR_BLOCK   '*'
 #define CHR_BOUNDS  '$'
-#define CHR_EMPTY  ' '
+#define CHR_EMPTY   ' '
 
 #endif

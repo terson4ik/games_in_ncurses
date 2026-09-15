@@ -1,4 +1,4 @@
-CFLAGS = -Wall -ansi -pedantic
+CFLAGS = -Wall -pedantic
 LIBS = -lncurses
 NAME_GAME = arka
 OBJMODULES = tui.o arkanoid.o main.o

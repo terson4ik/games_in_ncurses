@@ -4,8 +4,16 @@
 /* PLEASE, DON'T TOUCH IT */
 #define BLOCK_WIDTH     3
 #define BLOCK_HEIGHT    2
-#define BLOCK_ROWS      3
-#define BLOCK_COLS      4
+
+/* set prefered value in Makefile */
+#ifndef BLOCK_ROWS
+#  define BLOCK_ROWS      3
+#endif
+
+#ifndef BLOCK_COLS 
+#  define BLOCK_COLS      4
+#endif
+
 #define AREA_WIDTH      (BLOCK_WIDTH * BLOCK_COLS)
 #define AREA_HEIGHT     (BLOCK_ROWS * 6)
 #define MIN_TERM_SIZE   (AREA_WIDTH + 10)

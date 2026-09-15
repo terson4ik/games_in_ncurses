@@ -56,10 +56,12 @@ int main(void)
         case to_right:
             move_paddle(pad, &cup, RIGHT);
             break;
-        case pause:
-            set_pause_until_not_pressed(delay);
+        case game_pause:
+            set_pause_until_not_pressed();
             break;
         }
+        input_flush();
+        sleep_frame(delay);
 
         draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY);
         switch (ball_move(pill, pad, blocks, &cup, &callback_rect_block)) {
