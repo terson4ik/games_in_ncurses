@@ -42,6 +42,11 @@ int main(void)
             break;
         }
 
+        draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY);
+        if (!ball_move(pill, pad, blocks, &cup))
+            break;
+        draw_rect(ball_get_ptr_rect(pill), CHR_BALL);
+
     }
 
     terminate_game();

@@ -5,7 +5,7 @@
 #include "tui_conf.h"
 #include "arkanoid_conf.h"
 
-enum api_keys { quit, to_left, to_right, pause };
+enum api_keys { quit, to_left, to_right, pause, no_key };
 enum delays { DELAY_EASY = 10, DELAY_NORM = 100, 
               DELAY_HARD = 1000, DELAY_STOP = -1 
 };

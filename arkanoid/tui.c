@@ -13,15 +13,21 @@
 enum api_keys get_key(void)
 {
     switch (getch()) {
-        case KEY_LEFT:
-            return to_left;
-        case KEY_RIGHT:
-            return to_right;
+    case KEY_LEFT:
+        return to_left;
+    case KEY_RIGHT:
+        return to_right;
 
-        case 'q':
-        case 'Q':
-        case KEY_ESCAPE:
-            return quit;
+    case 'q':
+    case 'Q':
+    case KEY_ESCAPE:
+        return quit;
+    case 'p':
+    case KEY_SPACE:
+        return pause;
+
+    default:
+        return no_key;
     }
 }
 
@@ -66,7 +72,7 @@ int init_game(point *field, rectangle *cup, int *delay)
     noecho();
     keypad(stdscr, 1);
     *delay = DELAY_NORM; /* TODO: gived in tui */
-    timeout(delay);
+    timeout(*delay);
     getmaxyx(stdscr, field->y, field->x);
     cup->up_left.x = ((field->x-AREA_WIDTH) / 2)-1;
     cup->up_left.y = 0;
