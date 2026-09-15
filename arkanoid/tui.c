@@ -1,11 +1,28 @@
 #include "tui.h"
 #include <curses.h>
 
-enum delays { DELAY_EASY = 10, DELAY_NORM = 100, DELAY_HARD = 1000 };
+#ifdef KEY_ENTER /* In Debian, enter is 10 or '\n' */
+#  undef KEY_ENTER
+#  define KEY_ENTER '\n'
+#endif
 
-int get_key(void)
+#define KEY_SPACE   ' '
+#define KEY_ESCAPE  27
+
+
+enum api_keys get_key(void)
 {
-    return getch();
+    switch (getch()) {
+        case KEY_LEFT:
+            return to_left;
+        case KEY_RIGHT:
+            return to_right;
+
+        case 'q':
+        case 'Q':
+        case KEY_ESCAPE:
+            return quit;
+    }
 }
 
 void draw_rect(const rectangle *r, int chr)
@@ -15,6 +32,13 @@ void draw_rect(const rectangle *r, int chr)
         for(y = r->up_left.y; y <=r->down_right.y; y++)
             mvaddch(y, x, chr);
     refresh();
+}
+
+void set_pause_until_not_pressed(enum delays delay)
+{
+    timeout(pause);
+    getch();
+    timeout(delay);
 }
 
 void draw_contour(const rectangle *r, int chr)
@@ -49,6 +73,7 @@ int init_game(point *field, rectangle *cup, int *delay)
     cup->down_right.x = cup->up_left.x + AREA_WIDTH+1;
     cup->down_right.y = cup->up_left.y + AREA_HEIGHT+1;
     /* calc cup */
+    return 1;
 }
 
 void terminate_game(void)

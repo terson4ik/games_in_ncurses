@@ -5,18 +5,16 @@
 #include "tui_conf.h"
 #include "arkanoid_conf.h"
 
-#ifdef KEY_ENTER /* In Debian, enter is 10 or '\n' */
-#  undef KEY_ENTER
-#  define KEY_ENTER '\n'
-#endif
+enum api_keys { quit, to_left, to_right, pause };
+enum delays { DELAY_EASY = 10, DELAY_NORM = 100, 
+              DELAY_HARD = 1000, DELAY_STOP = -1 
+};
 
-#define KEY_SPACE   ' '
-#define KEY_ESCAPE  27
-
-int init_game(point *field, rectangle *cup, int *delay);
+int init_game(point *field, rectangle *cup, enum delays *delay);
 void terminate_game(void);
-int get_key(void);
+enum api_keys get_key(void);
 void draw_rect(const rectangle *r, int chr);
 void draw_contour(const rectangle *r, int chr);
+void set_pause_until_not_pressed(enum delays delay);
 
 #endif
