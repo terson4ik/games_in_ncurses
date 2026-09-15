@@ -6,6 +6,7 @@
 #define BLOCK_COLS  4
 #define AREA_WIDTH  (BLOCK_SIZE * BLOCK_COLS)
 #define BLOCK_ROWS  3
+#define AREA_HEIGHT (BLOCK_ROWS * 6)
 #define PADDLE_LEN  4
 
 #endif

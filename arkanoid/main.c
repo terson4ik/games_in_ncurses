@@ -12,7 +12,9 @@ int main(void)
     int key, delay;
 
     init_game(&game_size, &cup, &delay);
-    objects_init(&pad, &pill, &blocks, &game_size, &cup);
+    objects_init(&pad, &pill, &blocks, &cup);
+    draw_contour(&cup, CHR_BOUNDS);
+    draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE);
 
     while ((key = get_key()) != KEY_ESCAPE && key != 'q' && key != 'Q'){
         /* game loop */
