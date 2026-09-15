@@ -82,8 +82,12 @@ ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup)
     /* touch floor? */
     if (b->pos.y + b->vector.y < 0)
         b->vector.y = DOWN;
+
+    /* touch lave? */
     if (b->pos.y + b->vector.y >= cup->down_right.y)
         return 0;
+        
+    /* touche paddle? */
     if (b->pos.y + b->vector.y >= cup->down_right.y - 1)
         if (b->pos.x >= p->cur_r.up_left.x
         && b->pos.x <= p->cur_r.down_right.x)

@@ -1,3 +1,4 @@
+#include <stdio.h> /* print error messages */
 #include "default_structs.h"
 #include "arkanoid.h"
 #include "tui.h"
@@ -21,10 +22,16 @@ int main(void)
     enum delays delay;
     enum api_keys key;
 
-    if(!init_game(&game_size, &cup, &delay))
+    if(!init_game(&game_size, &cup, &delay)) {
+        terminate_game();
+        fprintf(stderr, "Size must be greater then %d\n", MIN_TERM_SIZE);
         return 1;
-    if (!objects_init(&pad, &pill, &blocks, &cup))
-        return 1;
+    }
+    if (!objects_init(&pad, &pill, &blocks, &cup)) {
+        terminate_game();
+        fputs("RAM is too small. Clear you RAM\n", stderr);
+        return 2;
+    }
     draw_contour(&cup, CHR_BOUNDS);
     draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE);
     draw_rect(ball_get_ptr_rect(pill), CHR_BALL);

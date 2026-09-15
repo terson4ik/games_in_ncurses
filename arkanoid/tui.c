@@ -74,6 +74,9 @@ int init_game(point *field, rectangle *cup, int *delay)
     *delay = DELAY_NORM; /* TODO: gived in tui */
     timeout(*delay);
     getmaxyx(stdscr, field->y, field->x);
+    if (field->x < MIN_TERM_SIZE || field->y < MIN_TERM_SIZE)
+        return 0;
+
     cup->up_left.x = ((field->x-AREA_WIDTH) / 2)-1;
     cup->up_left.y = 0;
     cup->down_right.x = cup->up_left.x + AREA_WIDTH+1;
