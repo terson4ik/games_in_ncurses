@@ -4,6 +4,7 @@
 #include "tui.h"
 
 enum sides { LEFT = -1, RIGHT = +1 };
+enum win_state { WIN = 1, LOSE = -1, UNKOWN = 0 };
 
 static void move_paddle(paddle *pad, const rectangle *cup, enum sides side)
 {
@@ -22,12 +23,13 @@ static void spawn_blocks(block *blocks)
 int main(void)
 {
     point game_size;
-    rectangle cup;
+    rectangle cup, *callback_rect_block;
     block *blocks;
     paddle *pad;
     ball *pill;
     enum delays delay;
     enum api_keys key;
+    enum win_state is_win;
 
     if(!init_game(&game_size, &cup, &delay)) {
         terminate_game();
@@ -45,7 +47,8 @@ int main(void)
     draw_rect(ball_get_ptr_rect(pill), CHR_BALL);
     spawn_blocks(blocks);
 
-    while ((key = get_key()) != quit) {
+    is_win = UNKOWN;
+    while ((key = get_key()) != quit && is_win == UNKOWN) {
         switch (key) {
         case to_left:
             move_paddle(pad, &cup, LEFT);
@@ -59,10 +62,19 @@ int main(void)
         }
 
         draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY);
-        if (!ball_move(pill, pad, blocks, &cup))
+        switch (ball_move(pill, pad, blocks, &cup, &callback_rect_block)) {
+        case hit:
+            draw_rect(callback_rect_block, CHR_EMPTY);
+            if (block_all_destroyed(blocks))
+                is_win = WIN;
             break;
-        draw_rect(ball_get_ptr_rect(pill), CHR_BALL);
+        case lose:
+            is_win = LOSE;
+            break;
+        case nothing:
+        }
 
+        draw_rect(ball_get_ptr_rect(pill), CHR_BALL);
     }
 
     terminate_game();

@@ -17,8 +17,10 @@ void objects_erase(paddle *p_paddle, ball *p_ball, block *p_blocks);
 void paddle_move(paddle *pad, const rectangle *cup, int dx);
 
 enum ball_act
-ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup);
+ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup, 
+                                        rectangle **callback_rect_block);
 
+int block_all_destroyed(block *blks);
 rectangle *paddle_get_ptr_rect(const paddle *p);
 rectangle *ball_get_ptr_rect(const ball *b);
 rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col);

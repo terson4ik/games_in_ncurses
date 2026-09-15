@@ -85,8 +85,27 @@ void paddle_move(paddle *pad, const rectangle *cup, int dx)
     }
 }
 
+static rectangle *block_check_hit(block *blks, const ball *b)
+{
+    int col, row;
+    for (row = 0; row < BLOCK_ROWS; row++)
+        for (col = 0; col < BLOCK_COLS; col++) {
+            int ind = (row * BLOCK_COLS + col);
+            if (blks[ind].is_die == 0
+              && b->pos.x >= blks[ind].rect.up_left.x
+              && b->pos.x <= blks[ind].rect.down_right.x
+              && b->pos.y >= blks[ind].rect.up_left.y
+              && b->pos.y <= blks[ind].rect.down_right.y) {
+                blks[ind].is_die = 1;
+                return &blks[ind].rect;
+              }
+        }
+    return NULL;
+}
+
 enum ball_act
-ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup)
+ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup, 
+                                        rectangle **callback_rect_block)
 {
     /* touch walls? */
     if (b->pos.x + b->vector.x <= cup->up_left.x
@@ -99,7 +118,7 @@ ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup)
 
     /* touch lave? */
     if (b->pos.y + b->vector.y >= cup->down_right.y)
-        return 0;
+        return lose;
 
     /* touche paddle? */
     if (b->pos.y + b->vector.y >= cup->down_right.y - 1)
@@ -107,9 +126,24 @@ ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup)
         && b->pos.x <= p->cur_r.down_right.x)
             b->vector.y = UP;
 
+    if ((*callback_rect_block = block_check_hit(blks, b))) {
+        b->vector.y *= -1;
+        return hit;
+    }
+
     b->pos.x += b->vector.x;
     b->pos.y += b->vector.y;
 
+    return nothing;
+}
+
+int block_all_destroyed(block *blks)
+{
+    int col, row;
+    for (row = 0; row < BLOCK_ROWS; row++)
+        for (col = 0; col < BLOCK_COLS; col++)
+            if(blks[row * BLOCK_COLS + col].is_die == 0)
+                return 0;
     return 1;
 }
 
