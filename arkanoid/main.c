@@ -11,6 +11,13 @@ static void move_paddle(paddle *pad, const rectangle *cup, enum sides side)
     paddle_move(pad, cup, side);
     draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE);
 }
+static void spawn_blocks(block *blocks)
+{
+    int col, row;
+    for (row = 0; row < BLOCK_ROWS; row++)
+        for (col = 0; col < BLOCK_COLS; col++)
+            draw_rect(blocks_get_ptr_rect(blocks, row, col), CHR_BLOCK);
+}
 
 int main(void)
 {
@@ -28,6 +35,7 @@ int main(void)
         return 1;
     }
     if (!objects_init(&pad, &pill, &blocks, &cup)) {
+        objects_erase(pad, pill, blocks);
         terminate_game();
         fputs("RAM is too small. Clear you RAM\n", stderr);
         return 2;
@@ -35,6 +43,7 @@ int main(void)
     draw_contour(&cup, CHR_BOUNDS);
     draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE);
     draw_rect(ball_get_ptr_rect(pill), CHR_BALL);
+    spawn_blocks(blocks);
 
     while ((key = get_key()) != quit) {
         switch (key) {

@@ -19,6 +19,8 @@ void paddle_move(paddle *pad, const rectangle *cup, int dx);
 enum ball_act
 ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup);
 
-rectangle *paddle_get_ptr_rect(paddle *p);
-rectangle *ball_get_ptr_rect(ball *b);
+rectangle *paddle_get_ptr_rect(const paddle *p);
+rectangle *ball_get_ptr_rect(const ball *b);
+rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col);
+
 #endif

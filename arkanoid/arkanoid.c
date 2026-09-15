@@ -41,15 +41,24 @@ int objects_init(paddle **p_paddle, ball **p_ball, block **p_blocks,
     (*p_ball)->vector.x = (time(NULL) % 2 == 0) ? LEFT : RIGHT;
     (*p_ball)->vector.y = DOWN;
 
+    for (row = 0; row < BLOCK_ROWS; row++)
+        for (col = 0; col < BLOCK_COLS; col++) {
+            int ind = (row * BLOCK_COLS + col);
+            (*p_blocks)[ind].is_die = 0;
+            (*p_blocks)[ind].rect.up_left.x =cup->up_left.x+(col*BLOCK_WIDTH)+1;
+            (*p_blocks)[ind].rect.up_left.y = cup->up_left.y+(row*BLOCK_HEIGHT);
+            (*p_blocks)[ind].rect.down_right.x = (*p_blocks)[ind].rect.up_left.x + BLOCK_WIDTH-1;
+            (*p_blocks)[ind].rect.down_right.y = (*p_blocks)[ind].rect.up_left.y + BLOCK_HEIGHT-1;            
+        }
     return 1;
 }
 
-rectangle *paddle_get_ptr_rect(paddle *p)
+rectangle *paddle_get_ptr_rect(const paddle *p)
 {
     return &(p->cur_r);
 }
 
-rectangle *ball_get_ptr_rect(ball *b)
+rectangle *ball_get_ptr_rect(const ball *b)
 {
     static rectangle pseudo_rectangle_entry; /* wrapper for one pixel objects*/
 
@@ -60,6 +69,11 @@ rectangle *ball_get_ptr_rect(ball *b)
     = pseudo_rectangle_entry.up_left.y = b->pos.y;
 
     return &pseudo_rectangle_entry;
+}
+
+rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col)
+{
+    return &blocks[row * BLOCK_COLS + col].rect;
 }
 
 void paddle_move(paddle *pad, const rectangle *cup, int dx)
@@ -86,7 +100,7 @@ ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup)
     /* touch lave? */
     if (b->pos.y + b->vector.y >= cup->down_right.y)
         return 0;
-        
+
     /* touche paddle? */
     if (b->pos.y + b->vector.y >= cup->down_right.y - 1)
         if (b->pos.x >= p->cur_r.up_left.x
