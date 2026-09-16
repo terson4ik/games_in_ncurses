@@ -96,7 +96,7 @@ int main(void)
             break;
     }
     terminate_game();
-    fprintf(stderr, "Your score: %lu\nlvl: %lu\n", score, level);
+    fprintf(stderr, "score: %lu\nlvl: %lu\n", score, level);
     return 0;
 }
 
