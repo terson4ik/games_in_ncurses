@@ -1,3 +1,4 @@
+.vscode
 # objects
 *.o
 
@@ -8,3 +9,7 @@
 
 #secret dir
 *tmp
+
+arka
+snake
+

@@ -1,12 +1,12 @@
-CFLAGS = -Wall -ansi -pedantic
+CFLAGS = -Wall -pedantic
 LIBS = -lncurses
 NAME_GAME = arka
 OBJMODULES = tui.o arkanoid.o main.o
 
-tui.o: tui.h
-arkanoid.o: arkanoid.h
+tui.o: tui.h tui_conf.h arkanoid_conf.h
+arkanoid.o: arkanoid.h arkanoid_conf.h
 
-%.o: %.c default_defs.h
+%.o: %.c default_structs.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(NAME_GAME): $(OBJMODULES)

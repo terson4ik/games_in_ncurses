@@ -1,30 +1,31 @@
 #ifndef ARKANOID_H_SENTRY
 #define ARKANOID_H_SENTRY
 
-#include "default_defs.h"
+#include "default_structs.h"
+#include "arkanoid_conf.h"
 
+typedef struct paddle_tab paddle;
 typedef struct ball_tag ball;
-typedef struct paddle_tag paddle;
-typedef struct blocks_tag block;
+typedef struct block_tag block;
 
-int arkanoid_handle_resize(rectangle *cup, point *new_p);
+enum ball_act { hit, lose, nothing };
 
-ball *ball_init(point *game_field);
-paddle *paddle_init(point *game_field);
-block *blocks_init(rectangle *cup_field);
+int objects_init(paddle **p_paddle, ball **p_ball, block **p_blocks,
+                                        const rectangle *cup);
+void rebuild_entries(paddle *p_paddle, ball *p_ball, block *p_blocks,
+                                        const rectangle *cup);
+void objects_erase(paddle *p_paddle, ball *p_ball, block *p_blocks);
 
-void paddle_move(paddle *p, int dx, rectangle *small_field);
-int ball_update(ball *b, paddle *p, block *blks[], rectangle *small_field);
-point *ball_is_hit(ball *b, block *blks[]);
-void block_set_broken(block *blk);
-int blocks_is_exists(block *blks[]);
+void paddle_move(paddle *pad, const rectangle *cup, int dx);
 
-point blocks_get_point(block *blks[], int row, int col);
-point ball_get_point(ball *b);
-point paddle_get_point(paddle *p);
+enum ball_act
+ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup, 
+                                        rectangle **callback_rect_block);
 
-void ball_destroy(ball *b);
-void paddle_destroy(paddle *p);
-void blocks_destroy(block **blks);
+int block_all_destroyed(block *blks);
+const rectangle *paddle_get_ptr_rect(const paddle *p);
+const rectangle *ball_get_ptr_rect(const ball *b);
+const rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col);
+int block_is_live(const block *blocks, int row, int col);
 
 #endif
