@@ -109,22 +109,23 @@ static rectangle *block_check_hit(block *blks, const ball *b)
     return NULL;
 }
 
+static int ball_is_touch_wall(const ball *b, const rectangle *cup)
+{
+    return b->pos.x + b->vector.x <= cup->up_left.x
+        || b->pos.x + b->vector.x >= cup->down_right.x;
+}
+
 enum ball_act
 ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup, 
                                         rectangle **callback_rect_block)
 {
     /* touch walls? */
-    if (b->pos.x + b->vector.x <= cup->up_left.x
-       ||  b->pos.x + b->vector.x >= cup->down_right.x)
+    if (ball_is_touch_wall(b, cup))
         b->vector.x *= -1;
 
     /* touch floor? */
     if (b->pos.y + b->vector.y < 0)
         b->vector.y = DOWN;
-
-    /* touch lave? */
-    if (b->pos.y + b->vector.y >= cup->down_right.y)
-        return lose;
 
     /* touche paddle? */
     if (b->pos.y + b->vector.y >= cup->down_right.y - 1)
@@ -132,7 +133,13 @@ ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup,
         && b->pos.x <= p->cur_r.down_right.x) {
             b->vector.y = UP;
             b->vector.x = (rand() % 2 == 0) ? LEFT : RIGHT;
+            if (ball_is_touch_wall(b, cup))
+                b->vector.x *= -1;
         }
+
+    /* touch lava? */
+    if (b->pos.y + b->vector.y >= cup->down_right.y)
+        return lose;
             
 
     if ((*callback_rect_block = block_check_hit(blks, b))) {
