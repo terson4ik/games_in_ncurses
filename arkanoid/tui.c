@@ -106,6 +106,7 @@ void draw_rect(const rectangle *r, int chr, enum game_colors_pair pair)
     for (x = r->up_left.x; x <= r->down_right.x; x++)
         for(y = r->up_left.y; y <=r->down_right.y; y++)
             mvaddch(y, x, chr);
+    move(3, 0);
     refresh();
 }
 
