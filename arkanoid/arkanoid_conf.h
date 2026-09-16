@@ -16,7 +16,7 @@
 
 #define AREA_WIDTH      (BLOCK_WIDTH * BLOCK_COLS)
 #define AREA_HEIGHT     (BLOCK_ROWS * 6)
-#define MIN_TERM_SIZE   (AREA_WIDTH + 10)
+#define MIN_TERM_SIZE   (AREA_WIDTH + BLOCK_ROWS * 2)
 #define PADDLE_LEN      4
 
 #endif

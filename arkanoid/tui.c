@@ -1,4 +1,5 @@
 #include "tui.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h> /* usleep(); timeout too bad for rendering frames */
@@ -11,6 +12,38 @@
 
 #define KEY_SPACE   ' '
 #define KEY_ESCAPE  27
+
+enum records { new, old, nothing };
+
+static int update_file_stats(unsigned long n_scr, unsigned long n_lvl)
+{
+    FILE *fptr = fopen(RECORD_FILE_NAME, "w");
+    if (!fptr)
+        return 0;
+    fprintf(fptr, "%lu %lu", n_scr, n_lvl);
+    fclose(fptr);
+    return 1;
+}
+
+static enum records
+check_file_record(unsigned long new_scr, unsigned long new_lvl,
+                        unsigned long *big_scr, unsigned long *big_lvl)
+{
+    FILE *frec = fopen(RECORD_FILE_NAME, "r");
+    if (!frec) { /* file not exist */
+        if (update_file_stats(new_scr, new_lvl))
+            return new;
+    } else {
+        fscanf(frec, "%lu %lu", big_scr, big_lvl);
+        fclose(frec);
+        if (*big_scr > new_scr || *big_lvl > new_lvl)
+            return old;
+        else
+            if (update_file_stats(new_scr, new_lvl))
+                return new;
+    }
+    return nothing;
+}
 
 void sleep_frame(int delay)
 {
@@ -169,7 +202,9 @@ void end_game(enum win_state is_win, point *max_xy,
                                     unsigned long score, unsigned long lvl)
 {
     int key, x, y;
+    unsigned long tmp_scr, tmp_lvl;
     rectangle pseudo_rect;
+
     pseudo_rect.up_left.x = 0;
     pseudo_rect.up_left.y = 0;
     pseudo_rect.down_right.x = max_xy->x;
@@ -183,9 +218,19 @@ void end_game(enum win_state is_win, point *max_xy,
         mvaddstr(y++, x, "WOW!!!");
         mvaddstr(y++, x, "YOU WIN! :)");
     } else {
+        enum records rec = check_file_record(score, lvl, &tmp_scr, &tmp_lvl);
         draw_rect(&pseudo_rect, ' ', LOSE_PAIR);
         mvaddstr(y++, x, "WE ARE SORRY.");
         mvaddstr(y++, x, "YOU LOSE :(");
+        
+        if (rec == new) {
+            attrset(A_REVERSE | A_BOLD);
+            mvaddstr(y++, x, "BUT STOP!!!");
+            mvaddstr(y++, x, "IT'S YOUR NEW RECORD!!! :)");
+        } else if (rec == old) {
+            mvprintw(y++, x, "YOUR BEST SCORE: %lu", tmp_scr);
+            mvprintw(y++, x, "YOUR BEST LEVEL: %lu", tmp_lvl);
+        }
     }
     mvprintw(y++, x, "YOUR SCORE: %lu", score);
     mvprintw(y++, x, "YOUR LEVEL: %lu", lvl);

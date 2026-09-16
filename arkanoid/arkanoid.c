@@ -59,12 +59,12 @@ int objects_init(paddle **p_paddle, ball **p_ball, block **p_blocks,
     return 1;
 }
 
-rectangle *paddle_get_ptr_rect(const paddle *p)
+const rectangle *paddle_get_ptr_rect(const paddle *p)
 {
     return &(p->cur_r);
 }
 
-rectangle *ball_get_ptr_rect(const ball *b)
+const rectangle *ball_get_ptr_rect(const ball *b)
 {
     static rectangle pseudo_rectangle_entry; /* wrapper for one pixel objects*/
 
@@ -77,7 +77,7 @@ rectangle *ball_get_ptr_rect(const ball *b)
     return &pseudo_rectangle_entry;
 }
 
-rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col)
+const rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col)
 {
     return &blocks[row * BLOCK_COLS + col].rect;
 }

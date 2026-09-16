@@ -23,9 +23,9 @@ ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup,
                                         rectangle **callback_rect_block);
 
 int block_all_destroyed(block *blks);
-rectangle *paddle_get_ptr_rect(const paddle *p);
-rectangle *ball_get_ptr_rect(const ball *b);
-rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col);
+const rectangle *paddle_get_ptr_rect(const paddle *p);
+const rectangle *ball_get_ptr_rect(const ball *b);
+const rectangle *blocks_get_ptr_rect(const block *blocks, int row, int col);
 int block_is_live(const block *blocks, int row, int col);
 
 #endif
