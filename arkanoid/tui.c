@@ -182,7 +182,7 @@ int init_game(point *field, rectangle *cup, unsigned long *delay,
     *is_rebuild = 1;
     *delay = DELAY_NORM;
     } else
-        *delay += NEW_LVL;
+        *delay -= NEW_LVL;
 
     if (!handle_resize(field, cup))
         return 0;
