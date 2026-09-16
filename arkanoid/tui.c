@@ -12,15 +12,16 @@
 #define KEY_SPACE   ' '
 #define KEY_ESCAPE  27
 
-void sleep_frame(enum delays delay)
+void sleep_frame(int delay)
 {
     usleep(delay);
 }
 
-void update_stats(unsigned int score)
+void update_stats(unsigned long score, unsigned long lvl)
 {
     attrset(A_REVERSE);
-    mvprintw(0, 0, "score:%u    ", score);
+    mvprintw(0, 0, "LVL:%-4lu", lvl);
+    mvprintw(1, 0, "SCORE:%-6lu", score);
     attroff(A_REVERSE);
 }
 
@@ -129,10 +130,13 @@ int handle_resize(point *field, rectangle *cup)
     cup->up_left.y = 0;
     cup->down_right.x = cup->up_left.x + AREA_WIDTH+1;
     cup->down_right.y = cup->up_left.y + AREA_HEIGHT+1;
+    return 1;
 }
 
-int init_game(point *field, rectangle *cup, enum delays *delay)
+int init_game(point *field, rectangle *cup, unsigned long *delay,
+                                                    int *is_rebuild)
 {
+    if (!*is_rebuild) {
     initscr();
     start_color();
     if (has_colors())
@@ -141,12 +145,16 @@ int init_game(point *field, rectangle *cup, enum delays *delay)
     curs_set(0);
     noecho();
     keypad(stdscr, 1);
-    *delay = DELAY_NORM; /* TODO: gived in tui */
-    timeout(0);
     srand(time(NULL));
+    *is_rebuild = 1;
+    *delay = DELAY_NORM;
+    } else
+        *delay += NEW_LVL;
+
     if (!handle_resize(field, cup))
         return 0;
 
+    timeout(0);
     /* calc cup */
     return 1;
 }
@@ -157,7 +165,8 @@ void input_flush(void)
         ;
 }
 
-int end_game(enum win_state is_win, point *max_xy, unsigned int score)
+void end_game(enum win_state is_win, point *max_xy,
+                                    unsigned long score, unsigned long lvl)
 {
     int key, x, y;
     rectangle pseudo_rect;
@@ -171,23 +180,25 @@ int end_game(enum win_state is_win, point *max_xy, unsigned int score)
     attrset(A_REVERSE | A_BOLD);
     if (is_win == WIN) {
         draw_rect(&pseudo_rect, ' ', WIN_PAIR);
-        mvaddstr(y, x, "WOW!!!");
-        mvaddstr(y + 1, x, "YOU WIN! :)");
+        mvaddstr(y++, x, "WOW!!!");
+        mvaddstr(y++, x, "YOU WIN! :)");
     } else {
         draw_rect(&pseudo_rect, ' ', LOSE_PAIR);
-        mvaddstr(y, x, "WE ARE SORRY.");
-        mvaddstr(y + 1, x, "YOU LOSER :(");
+        mvaddstr(y++, x, "WE ARE SORRY.");
+        mvaddstr(y++, x, "YOU LOSE :(");
     }
-    mvprintw(y + 2, x, "YOUR SCORE: %u", score);
+    mvprintw(y++, x, "YOUR SCORE: %lu", score);
+    mvprintw(y++, x, "YOUR LEVEL: %lu", lvl);
+
     attrset(A_BLINK | A_UNDERLINE | A_BOLD);
-    mvaddstr(y + 3, x, "TYPE ENTER TO CONTINUE. . .");
+    mvaddstr(y, x, "TYPE ENTER TO CONTINUE. . .");
     refresh();
     timeout(DELAY_STOP);
     key = ERR;
     while ((key = getch()) != KEY_ENTER)
         if (key == KEY_RESIZE) {
             getmaxyx(stdscr, max_xy->y, max_xy->x);
-            end_game(is_win, max_xy, score);
+            end_game(is_win, max_xy, score, lvl);
             break;
         }
 }

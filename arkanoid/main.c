@@ -12,7 +12,7 @@ static void spawn_blocks(block *blocks);
 static int safety_resize(paddle *pad, ball *ba, block *blocks,
                                 point *field, rectangle *cup);
 
-#define SAFE_RESIZE_MACRO() \
+#define BRUTE_RESIZE_MACRO() \
     if (!safety_resize(pad, pill, blocks, &game_size, &cup)){ \
         objects_erase(pad, pill, blocks); \
         terminate_game(); \
@@ -26,70 +26,77 @@ int main(void)
     block *blocks;
     paddle *pad;
     ball *pill;
-    enum delays delay;
     enum api_keys key;
-    enum win_state is_win;
-    unsigned int score = 0;
-
-    if(!init_game(&game_size, &cup, &delay)) {
-        terminate_game();
-        fprintf(stderr, "Size must be greater then %d\n", MIN_TERM_SIZE);
-        return 1;
-    }
-    if (!objects_init(&pad, &pill, &blocks, &cup)) {
-        objects_erase(pad, pill, blocks);
-        terminate_game();
-        fputs("RAM is too small. Clear you RAM\n", stderr);
-        return 2;
-    }
-    SAFE_RESIZE_MACRO();
-
-    is_win = UNKOWN;
-    update_stats(score);
-    while ((key = get_key()) != quit) {
-        switch (key) {
-        case to_left:    move_paddle(pad, &cup, LEFT);  break;
-        case to_right:   move_paddle(pad, &cup, RIGHT); break;
-        case game_pause:
-            input_flush();
-            set_pause_until_not_pressed();
-            break;
-        case quit:       break;
-        case resize: 
-            while ((key = get_key()) == resize)
-                ; /* get final size and call resize */
-            SAFE_RESIZE_MACRO();
-        case no_key: break;
+    enum win_state is_win = UNKOWN;
+    unsigned long score = 0, level = 1, delay;
+    int need_rebuild = 0;
+    while (is_win != LOSE) {
+        if(!init_game(&game_size, &cup, &delay, &need_rebuild)) {
+            terminate_game();
+            fprintf(stderr, "Size must be greater then %d\n", MIN_TERM_SIZE);
+            return 1;
         }
+        if (!objects_init(&pad, &pill, &blocks, &cup)) {
+            objects_erase(pad, pill, blocks);
+            terminate_game();
+            fputs("RAM is too small. Clear you RAM\n", stderr);
+            return 2;
+        }
+        BRUTE_RESIZE_MACRO();
 
+        is_win = UNKOWN;
+        update_stats(score, level);
         input_flush();
-        sleep_frame(delay);
-
-        draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY, BG_PAIR);
-        switch (ball_move(pill, pad, blocks, &cup, &callback_rect_block)) {
-        case hit:
-            draw_rect(callback_rect_block, CHR_EMPTY, BG_PAIR);
-            if (block_all_destroyed(blocks)) {
-                is_win = WIN;
-                end_game(is_win, &game_size, score);
+        while ((key = get_key()) != quit) {
+            switch (key) {
+            case to_left:    move_paddle(pad, &cup, LEFT);  break;
+            case to_right:   move_paddle(pad, &cup, RIGHT); break;
+            case game_pause:
+                input_flush();
+                set_pause_until_not_pressed();
+                break;
+            case quit:      break;
+            case resize: 
+                while ((key = get_key()) == resize)
+                    ; /* get final size and call resize */
+                BRUTE_RESIZE_MACRO();
+            case no_key: break;
             }
-            score += 16;
-            update_stats(score);
-            break;
-        case lose:
-            is_win = LOSE;
-            end_game(is_win, &game_size, score);
-            break;
-        case nothing: break;
+
+            input_flush();
+            sleep_frame(delay);
+
+            draw_rect(ball_get_ptr_rect(pill), CHR_EMPTY, BG_PAIR);
+            switch (ball_move(pill, pad, blocks, &cup, &callback_rect_block)) {
+            case hit:
+                draw_rect(callback_rect_block, CHR_EMPTY, BG_PAIR);
+                if (block_all_destroyed(blocks)) {
+                    is_win = WIN;
+                    end_game(is_win, &game_size, score, level);
+                    score += SCORE_NEW_LEVEL;
+                    level++;
+                } else {
+                    score += rand() % SCORE_DESTROY_BLOCK + 1;
+                    update_stats(score, level);
+                }
+                break;
+            case lose:
+                is_win = LOSE;
+                end_game(is_win, &game_size, score, level);
+                break;
+            case nothing: break;
+            }
+            if (is_win == UNKOWN)
+                draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
+            else
+                break;
         }
-        if (is_win == UNKOWN)
-            draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
-        else
+        objects_erase(pad, pill, blocks);
+        if (key == quit)
             break;
     }
-
     terminate_game();
-    objects_erase(pad, pill, blocks);
+    fprintf(stderr, "Your score: %lu\nlvl: %lu\n", score, level);
     return 0;
 }
 
