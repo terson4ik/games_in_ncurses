@@ -4,7 +4,7 @@
 #include "arkanoid.h"
 #include "tui.h"
 
-enum sides { LEFT = -1, RIGHT = +1 };
+enum sides { LEFT = -1, RIGHT = +1, NONE = 0 };
 
 
 static void move_paddle(paddle *pad, const rectangle *cup, enum sides side);
@@ -86,9 +86,10 @@ int main(void)
                 break;
             case nothing: break;
             }
-            if (is_win == UNKOWN)
+            if (is_win == UNKOWN) {
+                move_paddle(pad, &cup, NONE);
                 draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
-            else
+            } else
                 break;
         }
         objects_erase(pad, pill, blocks);
@@ -103,7 +104,8 @@ int main(void)
 static void move_paddle(paddle *pad, const rectangle *cup, enum sides side)
 {
     draw_rect(paddle_get_ptr_rect(pad), CHR_EMPTY, BG_PAIR);
-    paddle_move(pad, cup, side);
+    if (side != NONE)
+        paddle_move(pad, cup, side);
     draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE, PADDLE_PAIR);
 }
 
