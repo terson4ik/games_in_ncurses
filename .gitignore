@@ -1,0 +1,15 @@
+.vscode
+# objects
+*.o
+
+# garbage
+*~
+.*~
+*.out
+
+#secret dir
+*tmp
+
+arka
+snake
+

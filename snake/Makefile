@@ -1,16 +1,19 @@
+OBJMODULES = snake.o tui.o main.o
 CFLAGS = -Wall -ansi -pedantic 
+LIBS = -lncurses
+GAME_NAME = snake
 
-tui.o: tui.c tui.h common_types.h
-	$(CC) $(CFLAGS) -c $< -lncurses -o tui.o
+snake.o: snake.h
+tui.o: tui.h
 
-snake.o: snake.c snake.h common_types.h
-	$(CC) $(CFLAGS) -c $< -lncurses -o snake.o
+%.o: %.c common_types.h
+	$(CC) $(CFLAGS) -c $< $(LIBS) -o $@
 
-snake: main.c tui.o snake.o common_types.h
-	$(CC) $(CFLAGS) $^ -lncurses -o snake
+$(GAME_NAME): $(OBJMODULES)
+	$(CC) $(CFLAGS) $(OBJMODULES) $(LIBS) -o $@
 
-run: snake
-	./snake
+run: $(GAME_NAME)
+	./$(GAME_NAME)
 
 clean:
-	rm -f *.o snake
+	rm -f *.o $(GAME_NAME)
