@@ -129,8 +129,11 @@ ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup,
     /* touche paddle? */
     if (b->pos.y + b->vector.y >= cup->down_right.y - 1)
         if (b->pos.x >= p->cur_r.up_left.x
-        && b->pos.x <= p->cur_r.down_right.x)
+        && b->pos.x <= p->cur_r.down_right.x) {
             b->vector.y = UP;
+            b->vector.x = (rand() % 2 == 0) ? LEFT : RIGHT;
+        }
+            
 
     if ((*callback_rect_block = block_check_hit(blks, b))) {
         b->vector.y *= -1;
