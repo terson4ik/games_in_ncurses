@@ -12,5 +12,5 @@ $(GAME_NAME): $(OBJFILES)
 run: $(GAME_NAME)
 	./$(GAME_NAME)
 
-clear:
+clean:
 	rm -f *.o $(GAME_NAME) 
