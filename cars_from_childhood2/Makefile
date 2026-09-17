@@ -3,7 +3,7 @@ LIBS = -lncurses
 OBJFILES = main.o cars_engine.o graphics_render.o
 GAME_NAME = cars
 
-%.o: %.c common_structs.h
+%.o: %.c common_structs.h cars_settings.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(GAME_NAME): $(OBJFILES)
@@ -12,5 +12,5 @@ $(GAME_NAME): $(OBJFILES)
 run: $(GAME_NAME)
 	./$(GAME_NAME)
 
-clean:
+clear:
 	rm -f *.o $(GAME_NAME) 
