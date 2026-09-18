@@ -3,7 +3,6 @@
 
 /* typedef enemy and own cars in header file */
 struct car_tag {
-    car_vec_chrs frame;
     rectangle gabarites;
 };
 
@@ -11,14 +10,12 @@ struct enemys_tag {
     struct car_tag cars[ENEMYS_COUNT];
 };
 
-
-
 int  cars_init(own_car **p_own_c, enemy_car **p_enm_crs, const rectangle *way)
 {
     return 1;
 }
 
-void own_car_move(own_car *own_c, int shift, const rectangle *way)
+void own_car_move(own_car *own_c, const rectangle *way, int shift)
 {
 
 }
@@ -33,13 +30,13 @@ int  cars_is_hit(own_car *own_c, enemy_car *enm_cars)
     return 1;
 }
 
-const car_vec_chrs *enemy_car_get_pos(const enemy_car *enms,
-                                      enum enemy_cars_ind car)
+const point *enemy_car_get_pos(const enemy_car *enms,
+                               enum enemy_index car)
 {
     return 0;
 }
 
-const car_vec_chrs *own_car_get_pos(const own_car *own_c)
+const point *own_car_get_pos(const own_car *own_c)
 {
     return 0;
 }
