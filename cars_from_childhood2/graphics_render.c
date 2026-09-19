@@ -11,7 +11,7 @@
 
 enum time_values {
     FULL_SEC  = 1000000,
-    TIME_INIT = FULL_SEC / 100,
+    TIME_INIT = FULL_SEC / 10,
     TIME_STEP = 10
 };
 
@@ -35,7 +35,7 @@ int  graphic_init(rectangle *field, rectangle *way, useconds_t *delay)
     field->up_left.y = 0;
 
     way->up_left.x    = (field->down_right.x - STRIPS*CAR_WIDTH-1) / 2;
-    way->down_right.x = way->up_left.x + STRIPS*CAR_WIDTH;
+    way->down_right.x = way->up_left.x + STRIPS*CAR_WIDTH+1;
 
     way->up_left.y = 0;
     way->down_right.y = field->down_right.y;
@@ -77,7 +77,7 @@ enum key_vals get_key(void)
     }
 }
 
-void graphic_flush(void)
+void graphic_key_flush(void)
 {
     while (getch() != ERR) {
     }
@@ -102,22 +102,15 @@ void draw_rectangle(const rectangle *rect, int ch)
             mvaddch(y, x, ch);
 }
 
-void draw_rect_frame(const rectangle *frame, int ch)
+void draw_rect_vertical_frame(const rectangle *frame, int ch)
 {
-    const int down  = frame->down_right.y;
     const int right = frame->down_right.x;
-    int left = frame->up_left.x;
+    const int left = frame->up_left.x;
     int up;
     
-    for (up = frame->up_left.y; up <= down; up++) {
+    for (up = frame->up_left.y; up <= frame->down_right.y; up++) {
         mvaddch(up, left, ch);
         mvaddch(up, right, ch);
-    }
-    
-    up = frame->up_left.y;
-    for ( ; left <= right; left++) {
-        mvaddch(up, left, ch);
-        mvaddch(down, left, ch);
     }
 }
 

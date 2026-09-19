@@ -17,8 +17,8 @@ static void enemy_cars_set_x(struct car_tag *enem1, struct car_tag *enem2,
                              const rectangle *way)
 {
     do {
-        enem1->up_left.x = (rand() % STRIPS + 1) + way->up_left.x;
-        enem2->up_left.x = (rand() % STRIPS + 1) + way->up_left.x;
+        enem1->up_left.x = (rand() % STRIPS )*3 + 1 + way->up_left.x;
+        enem2->up_left.x = (rand() % STRIPS )*3 + 1 + way->up_left.x;
     } while (enem1->up_left.x == enem2->up_left.x);
 }
 

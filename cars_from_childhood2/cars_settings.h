@@ -7,7 +7,7 @@
 
 #define CHR_STRIP   '^'
 #define CHR_EMPTY   ' '
-
+#define CHR_BICH    '$'
 #define CHR_OWN_CAR_WHEELS  '0'
 #define CHR_OWN_CAR_BAMPER  '='
 #define CHR_OWN_CAR_BODY    'I'

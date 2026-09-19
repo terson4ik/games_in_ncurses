@@ -13,13 +13,13 @@ enum key_vals { key_left, key_right, key_pause, key_resize, key_exit, skip };
 /* if 0 then error, 1 all right */
 int  graphic_init(rectangle *field, rectangle *way, useconds_t *delay);
 enum key_vals get_key(void);
-void graphic_flush(void);
+void graphic_key_flush(void);
 void graphic_sleep(useconds_t delay);
 void graphic_decrease_time(useconds_t *delay);
 
 /* draw function work only in buffer; call update_frame() after any draw() */
 void draw_rectangle(const rectangle *rect, int ch);
-void draw_rect_frame(const rectangle *frame, int ch);
+void draw_rect_vertical_frame(const rectangle *frame, int ch);
 void draw_own_car(const point *up_left);
 void draw_enemy_car(const point *up_left);
 void draw_hide_car(const point *up_left);

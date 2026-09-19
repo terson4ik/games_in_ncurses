@@ -16,9 +16,12 @@ enum game_state { lose, playing };
 /* 0 is error, 1 is ok */
 static int game_start(own_car **player, enemy_car **enemys,
                       rectangle *field, rectangle *way, useconds_t *delay);
+
 static void move_player(own_car *player, const rectangle *way, int shift);
-static void move_enemys(enemy_car *enemys, const rectangle *way);
-static void update_road_mark(char *one_bit);
+static void move_cars_and_strip(own_car *player, enemy_car *enemys,
+                                const rectangle *way, char *road_bit);
+
+static void update_road_mark(char *one_bit, int x, int max_y);
 
 void handle_resize(own_car *player, enemy_car *enems, const rectangle *way);
 static void game_end(own_car *player, enemy_car *enemys);
@@ -40,6 +43,7 @@ int main(void)
         return 1;
     }
 
+    draw_rect_vertical_frame(&game_way, CHR_BICH);
     status = playing;
     while ((key = get_key()) != key_exit && status == playing) {
         switch (key) {
@@ -50,11 +54,11 @@ int main(void)
         case key_exit:   /* handling in while headline */ break;
         case skip:       break;
         }
-        graphic_flush();
+        graphic_key_flush();
 
-        update_road_mark(&road_bit);
         draw_own_car(own_car_get_pos(player));
-        move_enemys(enemys, &game_way);
+        move_cars_and_strip(player, enemys, &game_way, &road_bit);
+
         if (cars_is_hit(player, enemys))
             status = lose;
 
@@ -85,12 +89,27 @@ static void move_player(own_car *player, const rectangle *way, int shift)
     own_car_move(player, way, shift);
 }
 
-static void move_enemys(enemy_car *enemys, const rectangle *way)
+static void move_cars_and_strip(own_car *player, enemy_car *enemys,
+                                const rectangle *way, char *road_bit)
 {
+    enum enemy_index ind;
+    for (ind = FIRST; ind < ENEMYS_COUNT; ind++)
+        draw_hide_car(enemy_car_get_pos(enemys, ind));
+
+    enemy_car_update(enemys, way);
+
+    update_road_mark(road_bit, way->up_left.x + CAR_WIDTH+2, /* mid */
+                     way->down_right.y);
+
+    draw_own_car(own_car_get_pos(player));
+    for (ind = FIRST; ind < ENEMYS_COUNT; ind++)
+        draw_enemy_car(enemy_car_get_pos(enemys, ind));
 }
 
-static void update_road_mark(char *one_bit)
+static void update_road_mark(char *one_bit, int x, int max_y)
 {
+    draw_road(*one_bit, x, max_y);
+    *one_bit = !*one_bit;
 }
 
 void handle_resize(own_car *player, enemy_car *enems, const rectangle *way)
