@@ -16,7 +16,7 @@ enum game_state { lose, playing };
 /* 0 is error, 1 is ok */
 static int game_start(own_car **player, enemy_car **enemys,
                       rectangle *field, rectangle *way, useconds_t *delay);
-
+static void move_player(own_car *player, const rectangle *way, int shift);
 static void move_enemys(enemy_car *enemys, const rectangle *way);
 static void update_road_mark(char *one_bit);
 
@@ -43,9 +43,9 @@ int main(void)
     status = playing;
     while ((key = get_key()) != key_exit && status == playing) {
         switch (key) {
-        case key_right:  own_car_move(player, &game_way, to_right); break;
-        case key_left:   own_car_move(player, &game_way, to_left);  break;
-        case key_resize: handle_resize(player, enemys, &game_way);  break;
+        case key_right:  move_player(player, &game_way, to_right); break;
+        case key_left:   move_player(player, &game_way, to_left);  break;
+        case key_resize: handle_resize(player, enemys, &game_way); break;
         case key_pause:  graphic_pause(); break;
         case key_exit:   /* handling in while headline */ break;
         case skip:       break;
@@ -77,6 +77,12 @@ static int game_start(own_car **player, enemy_car **enemys,
 
     srand(time(NULL));
     return 1;
+}
+
+static void move_player(own_car *player, const rectangle *way, int shift)
+{
+    draw_hide_car(own_car_get_pos(player));
+    own_car_move(player, way, shift);
 }
 
 static void move_enemys(enemy_car *enemys, const rectangle *way)
