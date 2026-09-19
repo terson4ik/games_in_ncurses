@@ -1,9 +1,11 @@
-#ifndef CARS_VIEW_H_SENTRY
-#define CARS_VIEW_H_SENTRY
+#ifndef CARS_SETTINGS_H_SENTRY
+#define CARS_SETTINGS_H_SENTRY
 
 #define CAR_WIDTH   3
 #define CAR_HEIGHT  CAR_WIDTH
+#define STRIPS      3
 
+#define CHR_STRIP   '^'
 #define CHR_EMPTY   ' '
 
 #define CHR_OWN_CAR_WHEELS  '0'

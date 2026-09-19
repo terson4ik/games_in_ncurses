@@ -11,7 +11,7 @@ typedef struct car_tag own_car;
 
 /* NULLs not needed; 0 is error, 1 is ok */
 int  cars_init(own_car **p_own_c, enemy_car **p_enm_crs, const rectangle *way);
-int
+void
 cars_handling_resize(own_car *player, enemy_car *enems, const rectangle *way);
 
 /* only move; check hit in cars_is_hit() */

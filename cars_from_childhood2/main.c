@@ -7,8 +7,8 @@
 #include "cars_engine.h"
 
 enum move_vec {
-    to_left  = -1,
-    to_right = +1
+    to_left  = -CAR_WIDTH,
+    to_right = +CAR_WIDTH
 };
 
 enum game_state { lose, playing };
@@ -47,7 +47,8 @@ int main(void)
         case key_left:   own_car_move(player, &game_way, to_left);  break;
         case key_resize: handle_resize(player, enemys, &game_way);  break;
         case key_pause:  graphic_pause(); break;
-        case key_exit:  /* handling in while headline */ break;
+        case key_exit:   /* handling in while headline */ break;
+        case skip:       break;
         }
         graphic_flush();
 
