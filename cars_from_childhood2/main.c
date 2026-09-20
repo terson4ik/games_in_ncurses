@@ -23,12 +23,14 @@ static void move_cars_and_strip(own_car *player, enemy_car *enemys,
 
 static void update_road_mark(char *one_bit, int x, int max_y);
 
-void handle_resize(own_car *player, enemy_car *enems, const rectangle *way);
+void handle_resize(own_car *player, enemy_car *enems,
+                   rectangle *field, rectangle *way);
+                   
 static void game_end(own_car *player, enemy_car *enemys);
 
 int main(void)
 {
-    rectangle game_field, game_way;
+    rectangle field, way;
     enemy_car *enemys; /* No NULL needed */
     own_car *player; /* No NULL needed */
     enum game_state status;
@@ -39,14 +41,13 @@ int main(void)
     unsigned int gear, seconds; /* 64000 seconds */
     time_t cur_time, era_time;
     
-    if (!game_start(&player, &enemys, &game_field, &game_way, &delay)) {
+    if (!game_start(&player, &enemys, &field, &way, &delay)) {
         graphic_end(); /* OS dispose cars automatically */
-        fprintf(stderr, "Screen must be x=%d+, y=%d+\n",
-                MIN_SCR_WIDTH, MIN_SCR_HEIGHT);   
+        fputs("FREE YOUR RAM", stderr);
         return 1;
     }
 
-    draw_rect_vertical_frame(&game_way, CHR_BICH, brd_pair);
+    draw_rect_vertical_frame(&way, CHR_BICH, brd_pair);
 
     seconds  = 0;
     meters   = 0;
@@ -57,9 +58,9 @@ int main(void)
     while ((key = get_key()) != key_exit && status == playing) {
         time_t tmp_time;
         switch (key) {
-        case key_right:  move_player(player, &game_way, to_right); break;
-        case key_left:   move_player(player, &game_way, to_left);  break;
-        case key_resize: handle_resize(player, enemys, &game_way); break;
+        case key_right:  move_player(player, &way, to_right); break;
+        case key_left:   move_player(player, &way, to_left);  break;
+        case key_resize: handle_resize(player, enemys, &field, &way); break;
         case key_pause:  graphic_pause(); break;
         case key_exit:   /* Handling in while headline */ break;
         case skip:       break;
@@ -79,7 +80,7 @@ int main(void)
             }
         }
 
-        move_cars_and_strip(player, enemys, &game_way, &road_bit);
+        move_cars_and_strip(player, enemys, &way, &road_bit);
         meters++;
 
         draw_update_stats(meters, gear, seconds);
@@ -92,7 +93,7 @@ int main(void)
 
     if (status != playing) {
         graphic_sleep(FULL_SEC);
-        graphic_show_lose_src(&game_field, meters, seconds);
+        graphic_show_lose_src(&field, meters, seconds);
     }
 
     game_end(player, enemys);
@@ -104,8 +105,7 @@ int main(void)
 static int game_start(own_car **player, enemy_car **enemys,
                       rectangle *field, rectangle *way, useconds_t *delay)
 {
-    if (!graphic_init(field, way, delay))
-        return 0;
+    graphic_init(field, way, delay);
 
     if (!cars_init(player, enemys, way))
         return 0;
@@ -143,9 +143,16 @@ static void update_road_mark(char *one_bit, int x, int max_y)
     *one_bit = !*one_bit;
 }
 
-void handle_resize(own_car *player, enemy_car *enems, const rectangle *way)
+void handle_resize(own_car *player, enemy_car *enems,
+                   rectangle *field, rectangle *way)
 {
-    
+    char tmp = 0; /* wrapper */
+    graphic_erase_screen();
+    graphic_resize(field, way);
+    cars_handling_resize(player, enems, way);
+    draw_rect_vertical_frame(way, CHR_BICH, brd_pair);
+    move_cars_and_strip(player, enems, way, &tmp);
+    update_frame();
 }
 
 static void game_end(own_car *player, enemy_car *enemys)

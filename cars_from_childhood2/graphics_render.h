@@ -5,8 +5,9 @@
 #include "cars_settings.h"
 #include <unistd.h>
 
-#define MIN_SCR_HEIGHT  50
+#define MIN_SCR_HEIGHT  CAR_HEIGHT * 7
 #define MIN_SCR_WIDTH   (3*3+15)
+
 enum time_values {
     FULL_SEC   = 1000000,
     TIME_INIT  = FULL_SEC / 7,
@@ -17,7 +18,9 @@ enum my_color_pair { common_pair, playr_pair, enem_pair, brd_pair, lose_pair };
 enum key_vals { key_left, key_right, key_pause, key_resize, key_exit, skip };
 
 /* If 0 then error, 1 all right */
-int  graphic_init(rectangle *field, rectangle *way, useconds_t *delay);
+void graphic_init(rectangle *field, rectangle *way, useconds_t *delay);
+void graphic_resize(rectangle *field, rectangle *way);
+void graphic_erase_screen(void); 
 enum key_vals get_key(void);
 void graphic_key_flush(void);
 void graphic_sleep(useconds_t delay);

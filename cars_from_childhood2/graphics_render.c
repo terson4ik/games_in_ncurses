@@ -18,35 +18,54 @@ static void init_my_pairs(void)
 }
 
 /* if 0 then error, 1 all right */
-int  graphic_init(rectangle *field, rectangle *way, useconds_t *delay)
+void graphic_init(rectangle *field, rectangle *way, useconds_t *delay)
 {
     initscr();
     start_color();
     if (has_colors())
         init_my_pairs();
-    timeout(0); /* no timeout; usleep used */
+    /* timeout(0) handlided in resize func */
     keypad(stdscr, 1);
 
     curs_set(0);
     cbreak();
     noecho();
 
-    getmaxyx(stdscr, field->down_right.y, field->down_right.x);
-    if (0)
-        return 0;
+    graphic_resize(field, way);
+
+    *delay = TIME_INIT;
+}
+
+void graphic_resize(rectangle *field, rectangle *way)
+{
+    int row, col;
 
     field->up_left.x = 0;
     field->up_left.y = 0;
+    getmaxyx(stdscr, row, col);
+    timeout(-1);
+    while (row < MIN_SCR_HEIGHT || col < MIN_SCR_WIDTH) {
+        mvaddstr(0, 0, "SMALL");
+        mvaddstr(1, 0, "SCREEN");
+        while (getch() != KEY_RESIZE) {
+        }
+        getmaxyx(stdscr, row, col);
+    }
+    timeout(0);
 
+    field->down_right.x = col;
+    field->down_right.y = row;
+    
     way->up_left.x    = (field->down_right.x - STRIPS*CAR_WIDTH-1) / 2;
     way->down_right.x = way->up_left.x + STRIPS*CAR_WIDTH+1;
 
     way->up_left.y = 0;
     way->down_right.y = field->down_right.y;
+}
 
-    *delay = TIME_INIT;
-    
-    return 1;
+void graphic_erase_screen(void)
+{
+    clear();
 }
 
 enum key_vals get_key(void)
@@ -76,7 +95,8 @@ enum key_vals get_key(void)
     case 'Q':
     case KEY_ESCAPE:
         return key_exit;
-
+    case KEY_RESIZE:
+        return key_resize;
     default: return skip;
     }
 }
