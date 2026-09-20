@@ -1,2 +1,1 @@
-lose screen
 save in file

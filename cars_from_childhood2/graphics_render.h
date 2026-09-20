@@ -38,7 +38,7 @@ void draw_update_stats(size_t meters, unsigned int gear, unsigned int sec);
 /* No refrech in draws(), then after any draw call this update_frame() */
 void update_frame(void);
 
-void graphic_show_lose_src(const rectangle *fld, int meters, unsigned int sec);
+void graphic_show_lose_src(rectangle *fld, int meters, unsigned int sec);
 void graphic_pause(void);
 void graphic_end(void);
 

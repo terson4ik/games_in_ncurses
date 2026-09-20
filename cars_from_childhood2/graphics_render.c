@@ -54,8 +54,8 @@ enum key_vals get_key(void)
     switch (getch()) {
     case 'a':
     case 'A':
-    case 'h':
-    case 'H':
+    case 'j':
+    case 'J':
     case KEY_LEFT:
         return key_left;
 
@@ -206,10 +206,11 @@ void update_frame(void)
     refresh();
 }
 
-void graphic_show_lose_src(const rectangle *fld, int meters, unsigned int sec)
-{
-    const int x = fld->down_right.x/2 - 7; /* 7 is random namber, for good formating */
-    int y       = fld->down_right.y/2 - 4; /* 4------------------------------------- */
+void graphic_show_lose_src(rectangle *fld, int meters, unsigned int sec)
+{ /* If you redacting strings, please, set largest to this variable */
+    const char enter_larg_str[] = "PRESS ENTER TO CONTINUE . . .";
+    const int x = (fld->down_right.x - sizeof(enter_larg_str)) / 2;
+    int y = fld->down_right.y/2 - 4; /* 4 strings is avarage value */
     
     const unsigned int hrs  = sec/60 / 60;
     const unsigned int mins = (sec/60) % 60;
@@ -231,12 +232,13 @@ void graphic_show_lose_src(const rectangle *fld, int meters, unsigned int sec)
     mvprintw(y, x, "TIME SPENT: h:%2d m:%2d s:%2d", hrs, mins, secs);
     y++;
     attrset(A_BLINK | A_REVERSE);
-    mvaddstr(y, x, "PRESS ENTER TO CONTINUE . . .");
+    mvaddstr(y, x, enter_larg_str);
     refresh();
 
     timeout(-1);
     while ((key = getch()) != KEY_ENTER)
         if (key == KEY_RESIZE) {
+            getmaxyx(stdscr, fld->down_right.y, fld->down_right.x);
             graphic_show_lose_src(fld, meters, sec);
             break;
         }

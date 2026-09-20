@@ -145,6 +145,7 @@ static void update_road_mark(char *one_bit, int x, int max_y)
 
 void handle_resize(own_car *player, enemy_car *enems, const rectangle *way)
 {
+    
 }
 
 static void game_end(own_car *player, enemy_car *enemys)
