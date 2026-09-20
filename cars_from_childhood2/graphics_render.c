@@ -1,13 +1,22 @@
+#include <stdio.h> /* Save into file */
 #include <ncurses.h>
 #include "graphics_render.h"
 
-#ifdef KEY_ENTER /* in Debian this value must be return '\n' */
+#ifdef KEY_ENTER /* In Debian this value must be return '\n' */
 #  undef KEY_ENTER
 #  define KEY_ENTER '\n'
 #endif
 
 #define KEY_SPACE  ' '
 #define KEY_ESCAPE 27
+
+static void sec_to_hrs_mins_secs(unsigned int sec, unsigned int *hrs,
+                                 unsigned int *mins, unsigned int *secs )
+{
+    *hrs  = sec/60 / 60;
+    *mins = (sec/60) % 60;
+    *secs = sec % 60;
+}
 
 static void init_my_pairs(void)
 {
@@ -17,7 +26,7 @@ static void init_my_pairs(void)
     init_pair(lose_pair,  COLOR_BLACK,  COLOR_BLUE);
 }
 
-/* if 0 then error, 1 all right */
+/* If 0 then error, 1 all right */
 void graphic_init(rectangle *field, rectangle *way, useconds_t *delay)
 {
     initscr();
@@ -117,7 +126,7 @@ void graphic_decrease_time(useconds_t *delay)
     *delay -= TIME_STEP;
 }
 
-/* draw function work only in buffer; call update_frame() after any draw() */
+/* Draw function work only in buffer; call update_frame() after any draw() */
 void draw_rectangle(const rectangle *rect, int ch, enum my_color_pair pair)
 {
     int y, x;
@@ -194,7 +203,7 @@ void draw_hide_car(const point *up_left)
         mvprintw(y, up_left->x, "%c%c%c", CHR_EMPTY, CHR_EMPTY, CHR_EMPTY);
 }
 
-/* init position must be 0 or 1 */
+/* Init position must be 0 or 1 */
 void draw_road(char position, int x, int max_y)
 {
     int y, empty;
@@ -209,48 +218,95 @@ void draw_road(char position, int x, int max_y)
 
 void draw_update_stats(size_t meters, unsigned int gear, unsigned int sec)
 {
-    const unsigned int hours = sec/60 / 60;
-    const unsigned int minut = (sec/60) % 60;
-    const unsigned int secs  = sec % 60; 
+    unsigned int hours, minut, secs;
 
     attrset(A_REVERSE);
     mvprintw(0, 0, "METERS TRAVELED: %-6lu", meters);
     mvprintw(1, 0, "GEAR ENGAGED:    %-6u", gear);
+    sec_to_hrs_mins_secs(sec, &hours, &minut, &secs);
     mvprintw(2, 0, "TIME HAS PASSED: h:%2d m:%2d s:%2d", hours, minut, secs);
     attroff(A_REVERSE);
 }
 
-/* no refrech in draws(), then after any draw call this update_frame() */
+/* No refrech in draws(), then after any draw call this update_frame() */
 void update_frame(void)
 {
     refresh();
 }
 
-void graphic_show_lose_src(rectangle *fld, int meters, unsigned int sec)
+static void write_new_rec(size_t meters, unsigned int sec)
+{
+    FILE *new_rec = fopen(RECORD_FILE_NAME, "w");
+    if (!new_rec)
+        return;
+
+    fprintf(new_rec, "%ld %u", meters, sec);
+
+    fclose(new_rec);
+}
+
+/* If new record then write 0 to parameters */
+static void read_and_write_record(size_t *meters, unsigned int *sec)
+{
+    FILE *recptr = fopen(RECORD_FILE_NAME, "r");
+    if (recptr) {
+        size_t tmp_met;
+        unsigned int tmp_sec;
+
+        fscanf(recptr, "%lu %u", &tmp_met, &tmp_sec);
+        fclose(recptr);
+
+        if (tmp_met < *meters && tmp_sec < *sec)
+            write_new_rec(*meters, *sec);
+        else
+            return;
+    } else {
+        write_new_rec(*meters, *sec);
+    }
+
+    *meters = *sec = 0; /* new rec! */
+}
+
+void graphic_show_lose_src(rectangle *fld, size_t meters, unsigned int sec)
 { /* If you redacting strings, please, set largest to this variable */
     const char enter_larg_str[] = "PRESS ENTER TO CONTINUE . . .";
     const int x = (fld->down_right.x - sizeof(enter_larg_str)) / 2;
     int y = fld->down_right.y/2 - 4; /* 4 strings is avarage value */
     
-    const unsigned int hrs  = sec/60 / 60;
-    const unsigned int mins = (sec/60) % 60;
-    const unsigned int secs = sec % 60;
+    unsigned int hrs, mins, secs, tmp_sec;
+    size_t tmp_met;
 
     int key;
 
-    /* work also as clean() */
+
+    /* Work also as clean() */
     draw_rectangle(fld, CHR_EMPTY, lose_pair);
     if (has_colors())
         attrset(COLOR_PAIR(lose_pair));
     else
         attrset(COLOR_PAIR(common_pair));
 
-    mvaddstr(y, x, "YOU SMASH A CAR :(");
-    y++;
-    mvprintw(y, x, "METRS TRAVELED: %d", meters);
-    y++;
-    mvprintw(y, x, "TIME SPENT: h:%2d m:%2d s:%2d", hrs, mins, secs);
-    y++;
+    mvaddstr(y++, x, "YOU SMASH A CAR :(");
+    
+    tmp_met = meters;
+    tmp_sec = sec;
+    read_and_write_record(&tmp_met, &tmp_sec);
+    attrset(A_REVERSE);
+    if (tmp_met == 0) { /* new rec! */
+        mvaddstr(y++, x, "BUT!");
+        mvaddstr(y++, x, "WOW!");
+        mvaddstr(y++, x, "IT'S NEW RECORD!");
+    } else {
+        mvaddstr(y++, x, "YOUR OLD RECORD:");
+        mvprintw(y++, x, "BEST TRAVEL: %ldm", tmp_met);
+        sec_to_hrs_mins_secs(tmp_sec, &hrs, &mins, &secs);
+        mvprintw(y++, x, "BEST TIME: h:%2u m:%2u s:%2u", hrs, mins, secs);
+        attroff(A_REVERSE);
+    }
+
+    mvprintw(y++, x, "TRAVELED: %ldm", meters);
+    sec_to_hrs_mins_secs(sec, &hrs, &mins, &secs);
+    mvprintw(y++, x, "TIME SPENT: h:%2u m:%2u s:%2u", hrs, mins, secs);
     attrset(A_BLINK | A_REVERSE);
     mvaddstr(y, x, enter_larg_str);
     refresh();

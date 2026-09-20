@@ -5,6 +5,7 @@
 #include "cars_settings.h"
 #include <unistd.h>
 
+#define RECORD_FILE_NAME ".cars_RECORD.txt"
 #define MIN_SCR_HEIGHT  CAR_HEIGHT * 7
 #define MIN_SCR_WIDTH   (3*3+15)
 
@@ -41,7 +42,7 @@ void draw_update_stats(size_t meters, unsigned int gear, unsigned int sec);
 /* No refrech in draws(), then after any draw call this update_frame() */
 void update_frame(void);
 
-void graphic_show_lose_src(rectangle *fld, int meters, unsigned int sec);
+void graphic_show_lose_src(rectangle *fld, size_t meters, unsigned int sec);
 void graphic_pause(void);
 void graphic_end(void);
 
