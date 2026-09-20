@@ -1,6 +1,6 @@
-#include <stdio.h>  /* error messages*/
-#include <stdlib.h> /* init srand() */
-#include <time.h>   /* timer & correct init srand() */
+#include <stdio.h>  /* Error messages*/
+#include <stdlib.h> /* Init srand() */
+#include <time.h>   /* Timer & correct init srand() */
 #include "common_structs.h"
 #include "graphics_render.h"
 #include "cars_settings.h"
@@ -29,8 +29,8 @@ static void game_end(own_car *player, enemy_car *enemys);
 int main(void)
 {
     rectangle game_field, game_way;
-    enemy_car *enemys; /* no NULL needed */
-    own_car *player; /* no NULL needed */
+    enemy_car *enemys; /* No NULL needed */
+    own_car *player; /* No NULL needed */
     enum game_state status;
     enum key_vals key;
     useconds_t delay;
@@ -46,7 +46,7 @@ int main(void)
         return 1;
     }
 
-    draw_rect_vertical_frame(&game_way, CHR_BICH);
+    draw_rect_vertical_frame(&game_way, CHR_BICH, brd_pair);
 
     seconds  = 0;
     meters   = 0;
@@ -61,7 +61,7 @@ int main(void)
         case key_left:   move_player(player, &game_way, to_left);  break;
         case key_resize: handle_resize(player, enemys, &game_way); break;
         case key_pause:  graphic_pause(); break;
-        case key_exit:   /* handling in while headline */ break;
+        case key_exit:   /* Handling in while headline */ break;
         case skip:       break;
         }
         if ((key==key_left || key==key_right) && cars_is_hit(player, enemys))
@@ -81,19 +81,23 @@ int main(void)
 
         move_cars_and_strip(player, enemys, &game_way, &road_bit);
         meters++;
-        if (cars_is_hit(player, enemys))
-            status = lose;
 
         draw_update_stats(meters, gear, seconds);
         update_frame();
+        if (cars_is_hit(player, enemys))
+            status = lose;
+
         graphic_sleep(delay);
     }
 
     if (status != playing) {
-        /* lose screen*/
+        graphic_sleep(FULL_SEC);
+        graphic_show_lose_src(&game_field, meters, seconds);
     }
 
     game_end(player, enemys);
+    fprintf(stderr, "Game cars:\n"
+                    "Total meters:%ld\nTotal sec:%u\n", meters, seconds);
     return 0;
 }
 

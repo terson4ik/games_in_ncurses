@@ -9,11 +9,21 @@
 #define KEY_SPACE  ' '
 #define KEY_ESCAPE 27
 
+static void init_my_pairs(void)
+{
+    init_pair(playr_pair, COLOR_CYAN,   COLOR_BLACK);
+    init_pair(enem_pair,  COLOR_RED,    COLOR_BLACK);
+    init_pair(brd_pair,   COLOR_YELLOW, COLOR_YELLOW);
+    init_pair(lose_pair,  COLOR_BLACK,  COLOR_BLUE);
+}
+
 /* if 0 then error, 1 all right */
 int  graphic_init(rectangle *field, rectangle *way, useconds_t *delay)
 {
     initscr();
     start_color();
+    if (has_colors())
+        init_my_pairs();
     timeout(0); /* no timeout; usleep used */
     keypad(stdscr, 1);
 
@@ -88,29 +98,44 @@ void graphic_decrease_time(useconds_t *delay)
 }
 
 /* draw function work only in buffer; call update_frame() after any draw() */
-void draw_rectangle(const rectangle *rect, int ch)
+void draw_rectangle(const rectangle *rect, int ch, enum my_color_pair pair)
 {
     int y, x;
+    if (has_colors())
+        attrset(COLOR_PAIR(pair));
+    else
+        attrset(COLOR_PAIR(common_pair));
+
     for (y = rect->up_left.y; y < rect->down_right.y; y++)
         for (x = rect->up_left.x; x < rect->down_right.x; x++)
             mvaddch(y, x, ch);
 }
 
-void draw_rect_vertical_frame(const rectangle *frame, int ch)
+void draw_rect_vertical_frame(const rectangle *frame, int ch,
+                              enum my_color_pair pair)
 {
     const int right = frame->down_right.x;
     const int left = frame->up_left.x;
     int up;
-    attrset(A_REVERSE);
+
+    if (has_colors())
+        attrset(COLOR_PAIR(pair));
+    else
+        attrset(A_REVERSE);
+
     for (up = frame->up_left.y; up <= frame->down_right.y; up++) {
         mvaddch(up, left, ch);
         mvaddch(up, right, ch);
     }
-    attroff(A_REVERSE);
 }
 
 void draw_own_car(const point *up_left)
 {
+    if (has_colors())
+        attrset(COLOR_PAIR(playr_pair));
+    else
+        attrset(A_BOLD);
+
     mvprintw(up_left->y, up_left->x, "%c%c%c",
              CHR_OWN_CAR_WHEELS, CHR_OWN_CAR_BAMPER, CHR_OWN_CAR_WHEELS);
 
@@ -123,6 +148,11 @@ void draw_own_car(const point *up_left)
 
 void draw_enemy_car(const point *up_left)
 {
+    if (has_colors())
+        attrset(COLOR_PAIR(enem_pair));
+    else
+        attrset(common_pair);
+
     mvprintw(up_left->y, up_left->x, "%c%c%c",
              CHR_ENEMY_CAR_WHEELS, CHR_ENEMY_CAR_BAMPER, CHR_ENEMY_CAR_WHEELS);
 
@@ -137,6 +167,9 @@ void draw_hide_car(const point *up_left)
 {
     int i;
     int y = up_left->y;
+
+    attrset(COLOR_PAIR(common_pair));
+
     for (i = 3; i > 0; y++, i--)
         mvprintw(y, up_left->x, "%c%c%c", CHR_EMPTY, CHR_EMPTY, CHR_EMPTY);
 }
@@ -146,6 +179,7 @@ void draw_road(char position, int x, int max_y)
 {
     int y, empty;
 
+    attrset(A_BOLD);
     empty = position % 2;
     for (y = 0; y < max_y; y++) {
         mvaddch(y, x, empty ? CHR_EMPTY : CHR_STRIP);
@@ -155,7 +189,7 @@ void draw_road(char position, int x, int max_y)
 
 void draw_update_stats(size_t meters, unsigned int gear, unsigned int sec)
 {
-    const unsigned int hours = sec/60/60;
+    const unsigned int hours = sec/60 / 60;
     const unsigned int minut = (sec/60) % 60;
     const unsigned int secs  = sec % 60; 
 
@@ -170,6 +204,42 @@ void draw_update_stats(size_t meters, unsigned int gear, unsigned int sec)
 void update_frame(void)
 {
     refresh();
+}
+
+void graphic_show_lose_src(const rectangle *fld, int meters, unsigned int sec)
+{
+    const int x = fld->down_right.x/2 - 7; /* 7 is random namber, for good formating */
+    int y       = fld->down_right.y/2 - 4; /* 4------------------------------------- */
+    
+    const unsigned int hrs  = sec/60 / 60;
+    const unsigned int mins = (sec/60) % 60;
+    const unsigned int secs = sec % 60;
+
+    int key;
+
+    /* work also as clean() */
+    draw_rectangle(fld, CHR_EMPTY, lose_pair);
+    if (has_colors())
+        attrset(COLOR_PAIR(lose_pair));
+    else
+        attrset(COLOR_PAIR(common_pair));
+
+    mvaddstr(y, x, "YOU SMASH A CAR :(");
+    y++;
+    mvprintw(y, x, "METRS TRAVELED: %d", meters);
+    y++;
+    mvprintw(y, x, "TIME SPENT: h:%2d m:%2d s:%2d", hrs, mins, secs);
+    y++;
+    attrset(A_BLINK | A_REVERSE);
+    mvaddstr(y, x, "PRESS ENTER TO CONTINUE . . .");
+    refresh();
+
+    timeout(-1);
+    while ((key = getch()) != KEY_ENTER)
+        if (key == KEY_RESIZE) {
+            graphic_show_lose_src(fld, meters, sec);
+            break;
+        }
 }
 
 void graphic_pause(void)
