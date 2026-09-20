@@ -7,7 +7,7 @@
 
 #define RECORD_FILE_NAME ".cars_RECORD.txt"
 #define MIN_SCR_HEIGHT  CAR_HEIGHT * 7
-#define MIN_SCR_WIDTH   (3*3+15)
+#define MIN_SCR_WIDTH   73 /* dependend from stats strs */
 
 enum time_values {
     FULL_SEC   = 1000000,
