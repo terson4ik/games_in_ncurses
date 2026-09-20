@@ -1,4 +1,2 @@
 lose screen
-score
-speed up (use time variable and time())
 save in file

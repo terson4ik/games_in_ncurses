@@ -9,7 +9,7 @@
 #define MIN_SCR_WIDTH   (3*3+15)
 enum time_values {
     FULL_SEC   = 1000000,
-    TIME_INIT  = FULL_SEC / 7,
+    TIME_INIT  = FULL_SEC / 4, //FULL_SEC / 7,
     TIME_STEP  = 10000,
     TIME_1_ERA = 10,
 };

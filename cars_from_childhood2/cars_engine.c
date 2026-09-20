@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <stdlib.h> /* all objects a dynamic */
 #include "common_structs.h"
 #include "cars_engine.h"
 
@@ -39,7 +39,7 @@ cars_handling_resize(own_car *player, enemy_car *enems, const rectangle *way)
     player->up_left.x = way->up_left.x + 1 + CAR_WIDTH;
     player->up_left.y = way->down_right.y / 2;
 
-    enems->cars[FIRST].up_left.y  = -CAR_HEIGHT;
+    enems->cars[FIRST].up_left.y  = CAR_HEIGHT;
     enems->cars[SECOND].up_left.y = enems->cars[FIRST].up_left.y;
 
     enems->cars[THIRD].up_left.y  = player->up_left.y + CAR_HEIGHT;
@@ -76,12 +76,18 @@ void enemy_car_update(enemy_car *enms, const rectangle *way)
 int  cars_is_hit(own_car *own_c, enemy_car *enm_cars)
 {
     enum enemy_index ind;
+    const int play_x = own_c->up_left.x;
+    const int play_y = own_c->up_left.y;
+
     for (ind = FIRST; ind < ENEMYS_COUNT; ind++) {
-        if (own_c->up_left.x == enm_cars->cars[ind].up_left.x &&
-            own_c->up_left.y >= enm_cars->cars[ind].up_left.y &&
-            own_c->up_left.y <= enm_cars->cars[ind].up_left.y + CAR_HEIGHT)
+        const int enem_x = enm_cars->cars[ind].up_left.x;
+        const int enem_y = enm_cars->cars[ind].up_left.y;
+        if (play_x == enem_x &&
+            ((play_y >= enem_y && play_y <= enem_y + CAR_HEIGHT-1) ||
+            (play_y+CAR_HEIGHT-1 > enem_y &&
+            play_y+CAR_HEIGHT-1 < enem_y+CAR_HEIGHT-1)))
         {
-        return 1;
+            return 1;
         }
     }
     

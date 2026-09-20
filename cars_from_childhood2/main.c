@@ -1,6 +1,6 @@
-#include <stdio.h> /* error messages*/
+#include <stdio.h>  /* error messages*/
 #include <stdlib.h> /* init srand() */
-#include <time.h>
+#include <time.h>   /* timer & correct init srand() */
 #include "common_structs.h"
 #include "graphics_render.h"
 #include "cars_settings.h"
@@ -64,6 +64,9 @@ int main(void)
         case key_exit:   /* handling in while headline */ break;
         case skip:       break;
         }
+        if ((key==key_left || key==key_right) && cars_is_hit(player, enemys))
+            status = lose;
+
         graphic_key_flush();
         tmp_time =  time(NULL);
         if (cur_time < tmp_time) {
