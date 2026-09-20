@@ -76,8 +76,8 @@ void snake_spawn_apple(const snake *s, point *app, point *game_field)
 
 int snake_check_bounds(const snake *h, point *game_field) 
 {
-    return h->head->cur_p.x < 1 || h->head->cur_p.x >= game_field->x-1
-        || h->head->cur_p.y < 1 || h->head->cur_p.y >= game_field->y-1;
+    return h->head->cur_p.x < 1 || h->head->cur_p.x >= game_field->x-1 ||
+           h->head->cur_p.y < 1 || h->head->cur_p.y >= game_field->y-1;
 }
 
 int snake_change_side(snake *s, enum sides new_side)
@@ -122,8 +122,10 @@ int snake_lengthen(snake *s, point *game_field)
 
     if (new_segm->cur_p.x < 0 || new_segm->cur_p.x >= game_field->x ||
         new_segm->cur_p.y < 0 || new_segm->cur_p.y >= game_field->y)
+    {
         return ERROR;
-
+    }
+    
     s->length++;
     new_segm->next = s->head;
     new_segm->prev = s->tail;
