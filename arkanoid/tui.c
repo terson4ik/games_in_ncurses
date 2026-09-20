@@ -27,7 +27,7 @@ static int update_file_stats(unsigned long n_scr, unsigned long n_lvl)
 
 static enum records
 check_file_record(unsigned long new_scr, unsigned long new_lvl,
-                        unsigned long *big_scr, unsigned long *big_lvl)
+                  unsigned long *big_scr, unsigned long *big_lvl)
 {
     FILE *frec = fopen(RECORD_FILE_NAME, "r");
     if (!frec) { /* file not exist */
@@ -168,7 +168,7 @@ int handle_resize(point *field, rectangle *cup)
 }
 
 int init_game(point *field, rectangle *cup, unsigned long *delay,
-                                                    int *is_rebuild)
+              int *is_rebuild)
 {
     if (!*is_rebuild) {
     initscr();
@@ -200,7 +200,7 @@ void input_flush(void)
 }
 
 void end_game(enum win_state is_win, point *max_xy,
-                                    unsigned long score, unsigned long lvl)
+              unsigned long score, unsigned long lvl)
 {
     int key, x, y;
     unsigned long tmp_scr, tmp_lvl;

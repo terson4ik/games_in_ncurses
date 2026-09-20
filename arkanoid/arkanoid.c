@@ -20,7 +20,7 @@ struct block_tag {
 };
 /* typedefs in header file */
 void rebuild_entries(paddle *pad, ball *ba, block *blocks,
-                                        const rectangle *cup)
+                     const rectangle *cup)
 {
     int col, row;
     pad->cur_r.up_left.x = ((cup->up_left.x + cup->down_right.x) / 2) - 1;
@@ -42,7 +42,7 @@ void rebuild_entries(paddle *pad, ball *ba, block *blocks,
 }
 
 int objects_init(paddle **p_paddle, ball **p_ball, block **p_blocks,
-                                            const rectangle *cup)
+                 const rectangle *cup)
 {
     int row, col;
 
@@ -117,7 +117,7 @@ static int ball_is_touch_wall(const ball *b, const rectangle *cup)
 
 enum ball_act
 ball_move(ball *b, const paddle *p, block *blks, const rectangle *cup, 
-                                        rectangle **callback_rect_block)
+          rectangle **callback_rect_block)
 {
     /* touch walls? */
     if (ball_is_touch_wall(b, cup))

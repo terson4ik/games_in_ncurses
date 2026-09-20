@@ -10,7 +10,7 @@ enum sides { LEFT = -1, RIGHT = +1, NONE = 0 };
 static void move_paddle(paddle *pad, const rectangle *cup, enum sides side);
 static void spawn_blocks(block *blocks);
 static int safety_resize(paddle *pad, ball *ba, block *blocks,
-                                point *field, rectangle *cup);
+                         point *field, rectangle *cup);
 
 #define BRUTE_RESIZE_MACRO() \
     if (!safety_resize(pad, pill, blocks, &game_size, &cup)){ \
@@ -55,11 +55,11 @@ int main(void)
                 input_flush();
                 set_pause_until_not_pressed();
                 break;
-            case quit:      break;
             case resize: 
                 while ((key = get_key()) == resize)
                     ; /* get final size and call resize */
                 BRUTE_RESIZE_MACRO();
+            case quit:   break;
             case no_key: break;
             }
 
@@ -121,7 +121,7 @@ static void spawn_blocks(block *blocks)
 }
 
 static int safety_resize(paddle *pad, ball *ba, block *blocks,
-                                point *field, rectangle *cup)
+                         point *field, rectangle *cup)
 {
     if (!handle_resize(field, cup))
         return 0;
