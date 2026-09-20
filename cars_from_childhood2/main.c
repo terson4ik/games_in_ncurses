@@ -35,6 +35,9 @@ int main(void)
     enum key_vals key;
     useconds_t delay;
     char road_bit;
+    size_t meters;
+    unsigned int gear, seconds; /* 64000 seconds */
+    time_t cur_time, era_time;
     
     if (!game_start(&player, &enemys, &game_field, &game_way, &delay)) {
         graphic_end(); /* OS dispose cars automatically */
@@ -44,8 +47,15 @@ int main(void)
     }
 
     draw_rect_vertical_frame(&game_way, CHR_BICH);
-    status = playing;
+
+    seconds  = 0;
+    meters   = 0;
+    gear     = 1;
+    cur_time = time(NULL);
+    era_time = cur_time;
+    status   = playing;
     while ((key = get_key()) != key_exit && status == playing) {
+        time_t tmp_time;
         switch (key) {
         case key_right:  move_player(player, &game_way, to_right); break;
         case key_left:   move_player(player, &game_way, to_left);  break;
@@ -55,15 +65,29 @@ int main(void)
         case skip:       break;
         }
         graphic_key_flush();
+        tmp_time =  time(NULL);
+        if (cur_time < tmp_time) {
+            seconds++;
+            cur_time = tmp_time;
+            if (cur_time - era_time >= TIME_1_ERA) {
+                era_time = cur_time;
+                gear++;
+                graphic_decrease_time(&delay);
+            }
+        }
 
-        draw_own_car(own_car_get_pos(player));
         move_cars_and_strip(player, enemys, &game_way, &road_bit);
-
+        meters++;
         if (cars_is_hit(player, enemys))
             status = lose;
 
+        draw_update_stats(meters, gear, seconds);
         update_frame();
         graphic_sleep(delay);
+    }
+
+    if (status != playing) {
+        /* lose screen*/
     }
 
     game_end(player, enemys);

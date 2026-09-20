@@ -7,6 +7,12 @@
 
 #define MIN_SCR_HEIGHT  50
 #define MIN_SCR_WIDTH   (3*3+15)
+enum time_values {
+    FULL_SEC   = 1000000,
+    TIME_INIT  = FULL_SEC / 7,
+    TIME_STEP  = 10000,
+    TIME_1_ERA = 10,
+};
 
 enum key_vals { key_left, key_right, key_pause, key_resize, key_exit, skip };
 
@@ -25,7 +31,7 @@ void draw_enemy_car(const point *up_left);
 void draw_hide_car(const point *up_left);
 /* init position must be 0 or 1 */
 void draw_road(char position, int x, int max_y);
-
+void draw_update_stats(size_t meters, unsigned int gear, unsigned int sec);
 /* no refrech in draws(), then after any draw call this update_frame() */
 void update_frame(void);
 

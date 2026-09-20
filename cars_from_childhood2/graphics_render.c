@@ -9,12 +9,6 @@
 #define KEY_SPACE  ' '
 #define KEY_ESCAPE 27
 
-enum time_values {
-    FULL_SEC  = 1000000,
-    TIME_INIT = FULL_SEC / 10,
-    TIME_STEP = 10
-};
-
 /* if 0 then error, 1 all right */
 int  graphic_init(rectangle *field, rectangle *way, useconds_t *delay)
 {
@@ -107,11 +101,12 @@ void draw_rect_vertical_frame(const rectangle *frame, int ch)
     const int right = frame->down_right.x;
     const int left = frame->up_left.x;
     int up;
-    
+    attrset(A_REVERSE);
     for (up = frame->up_left.y; up <= frame->down_right.y; up++) {
         mvaddch(up, left, ch);
         mvaddch(up, right, ch);
     }
+    attroff(A_REVERSE);
 }
 
 void draw_own_car(const point *up_left)
@@ -156,6 +151,19 @@ void draw_road(char position, int x, int max_y)
         mvaddch(y, x, empty ? CHR_EMPTY : CHR_STRIP);
         empty = !empty;
     }
+}
+
+void draw_update_stats(size_t meters, unsigned int gear, unsigned int sec)
+{
+    const unsigned int hours = sec/60/60;
+    const unsigned int minut = (sec/60) % 60;
+    const unsigned int secs  = sec % 60; 
+
+    attrset(A_REVERSE);
+    mvprintw(0, 0, "METERS TRAVELED: %-6lu", meters);
+    mvprintw(1, 0, "GEAR ENGAGED:    %-6u", gear);
+    mvprintw(2, 0, "TIME HAS PASSED: h:%2d m:%2d s:%2d", hours, minut, secs);
+    attroff(A_REVERSE);
 }
 
 /* no refrech in draws(), then after any draw call this update_frame() */
