@@ -14,7 +14,7 @@ struct snake_tag {
 };
  /* typedef defined in header file */
 
-int snake_init(snake **s, point *game_field)
+int snake_init(snake **s, const point *game_field)
 {
     segment_snake *head;
     *s = malloc(sizeof(**s));
@@ -47,7 +47,7 @@ int snake_move(snake *s)
     return 0;
 }
 
-int handle_resize(snake *s, point *game_field)
+int handle_resize(snake *s, const point *game_field)
 {
     if (snake_check_hit(game_field, s->head))
         return ERROR;
@@ -66,7 +66,7 @@ int  snake_check_hit(const point *head, const segment_snake *next)
     return 0;
 }
 
-void snake_spawn_apple(const snake *s, point *app, point *game_field) 
+void snake_spawn_apple(const snake *s, point *app, const point *game_field)
 {
     do {
         app->x = (rand() % (game_field->x-2)) + 1;
@@ -74,7 +74,7 @@ void snake_spawn_apple(const snake *s, point *app, point *game_field)
     } while (snake_check_hit(app, s->head->next));
 }
 
-int snake_check_bounds(const snake *h, point *game_field) 
+int snake_check_bounds(const snake *h, const point *game_field) 
 {
     return h->head->cur_p.x < 1 || h->head->cur_p.x >= game_field->x-1 ||
            h->head->cur_p.y < 1 || h->head->cur_p.y >= game_field->y-1;
@@ -93,7 +93,7 @@ int snake_change_side(snake *s, enum sides new_side)
     return 0;
 }
 
-int snake_lengthen(snake *s, point *game_field)
+int snake_lengthen(snake *s, const point *game_field)
 {
     segment_snake *new_segm = malloc(sizeof(*new_segm));
     if (!new_segm)
@@ -135,7 +135,7 @@ int snake_lengthen(snake *s, point *game_field)
     return 0;
 }
 
-int snake_is_win(const snake *s, point *game_field)
+int snake_is_win(const snake *s, const point *game_field)
 {
     return s->length >= (game_field->x-2) * (game_field->y-2);
 }
