@@ -68,8 +68,12 @@ int main(void)
 
         update_frame();
     }
-
-    destroy_game(head);
+    /* funny feature -- print statistic after game */
+    {
+        unsigned int length = snake_get_size(head);
+        destroy_game(head);
+        fprintf(stderr, "Length of snake: %u\n", length);
+    }
     return 0;
 }
 
