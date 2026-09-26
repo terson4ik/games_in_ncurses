@@ -20,8 +20,6 @@ enum levels { easy = 0, normal, hard };
 
 static enum levels menu(const rectangle *fld);
 static void init_my_pairs(void);
-#define NEW_RECORD 0
-
 
 void graphics_init(rectangle *fld, int *delay, int size)
 {
@@ -195,7 +193,7 @@ static void write_new_rec(int new_rec)
     fclose(fp);
 }
 
-/* 0 is new record */
+#define NEW_RECORD 0
 static int check_record(int cur_size)
 {
     int score;
