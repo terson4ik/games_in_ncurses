@@ -14,23 +14,23 @@ struct snake_tag {
 };
  /* typedef defined in header file */
 
-int snake_init(snake **s, const point *game_field)
+int snake_init(snake **s, const rectangle *fld)
 {
     segment_snake *head;
     *s = malloc(sizeof(**s));
     head = malloc(sizeof(*head));
     if (!*s || !head)
-        return ERROR;
+        return 0;
 
     (*s)->side = (rand() + 1) % 4;
     (*s)->length = 1;
-    head->cur_p.x = game_field->x / 2;
-    head->cur_p.y = game_field->y / 2;
+    head->cur_p.x = fld->down_right.x / 2;
+    head->cur_p.y = fld->down_right.y / 2;
     head->next = head->prev = (*s)->head = (*s)->tail = head;
-    return 0;
+    return 1;
 }
 
-int snake_move(snake *s) 
+void snake_move(snake *s) 
 {
     s->tail->cur_p = s->head->cur_p;
     s->head = s->tail;
@@ -41,18 +41,12 @@ int snake_move(snake *s)
     case DOWN:  s->head->cur_p.y++; break;
     case LEFT:  s->head->cur_p.x--; break;
     case RIGHT: s->head->cur_p.x++; break;
-    default:
-        return ERROR;
     }
-    return 0;
 }
 
-int handle_resize(snake *s, const point *game_field)
+int snake_handle_resize(snake *s, const rectangle *fld)
 {
-    if (snake_check_hit(game_field, s->head))
-        return ERROR;
-    else
-        return 0;
+    return snake_check_hit(&fld->down_right, s->head);
 }
 
 int  snake_check_hit(const point *head, const segment_snake *next) 
@@ -66,38 +60,39 @@ int  snake_check_hit(const point *head, const segment_snake *next)
     return 0;
 }
 
-void snake_spawn_apple(const snake *s, point *app, const point *game_field)
+void snake_spawn_apple(const snake *s, point *app, const rectangle *fld)
 {
+    enum { lft_x = 1, up_y = 1 };
+    const int rgt_x = fld->down_right.x-1;
+    const int dwn_y = fld->down_right.y-1;
+
     do {
-        app->x = (rand() % (game_field->x-2)) + 1;
-        app->y = (rand() % (game_field->y-2)) + 1;
+        app->x = (rand() % rgt_x) + lft_x;
+        app->y = (rand() % dwn_y) + up_y;
     } while (snake_check_hit(app, s->head->next));
 }
 
-int snake_check_bounds(const snake *h, const point *game_field) 
+int snake_check_bounds(const snake *h, const rectangle *fld) 
 {
-    return h->head->cur_p.x < 1 || h->head->cur_p.x >= game_field->x-1 ||
-           h->head->cur_p.y < 1 || h->head->cur_p.y >= game_field->y-1;
+    return h->head->cur_p.x < 1 || h->head->cur_p.x >= fld->down_right.x ||
+           h->head->cur_p.y < 1 || h->head->cur_p.y >= fld->down_right.y;
 }
 
-int snake_change_side(snake *s, enum sides new_side)
+void snake_change_side(snake *s, enum sides new_side)
 {
     switch (new_side) {
     case UP:    if (s->side != DOWN)  s->side = UP;    break;
     case DOWN:  if (s->side != UP)    s->side = DOWN;  break;
     case LEFT:  if (s->side != RIGHT) s->side = LEFT;  break;
     case RIGHT: if (s->side != LEFT)  s->side = RIGHT; break;
-    default:
-        return ERROR;
     }
-    return 0;
 }
 
-int snake_lengthen(snake *s, const point *game_field)
+void snake_lengthen(snake *s)
 {
     segment_snake *new_segm = malloc(sizeof(*new_segm));
     if (!new_segm)
-        return ERROR;
+        return;
 
     switch (s->side) {
     case UP:
@@ -116,48 +111,45 @@ int snake_lengthen(snake *s, const point *game_field)
         new_segm->cur_p.x = s->tail->cur_p.x - 1;
         new_segm->cur_p.y = s->tail->cur_p.y;
         break;
-    default:
-        return ERROR;
     }
 
-    if (new_segm->cur_p.x < 0 || new_segm->cur_p.x >= game_field->x ||
-        new_segm->cur_p.y < 0 || new_segm->cur_p.y >= game_field->y)
-    {
-        return ERROR;
-    }
-    
     s->length++;
     new_segm->next = s->head;
     new_segm->prev = s->tail;
     s->tail->next = new_segm;
     s->tail = new_segm;
     s->head->prev = s->tail;
-    return 0;
 }
 
-int snake_is_win(const snake *s, const point *game_field)
+int snake_is_win(const snake *s, const rectangle *fld)
 {
-    return s->length >= (game_field->x-2) * (game_field->y-2);
+    /* 2 is size of border in eash borders */
+    return s->length >= (fld->down_right.x-2) * (fld->down_right.y-2);
 }
 
-point *get_head_point(const snake *s)
+const point *get_head_point(const snake *s)
 {
     return &s->head->cur_p;
 }
 
-point *get_tail_point(const snake *s)
+const point *get_tail_point(const snake *s)
 {
     return &s->tail->cur_p;
 }
 
-segment_snake *get_head_segm(const snake *s)
+const point *get_segment_point(const segment_snake *segm)
+{
+    return &segm->cur_p;
+}
+
+const segment_snake *get_head_segm(const snake *s)
 {
     return s->head;
 }
 
-segment_snake *get_after_head_segm(const snake *s)
+const segment_snake *get_next_segm(const segment_snake *segm)
 {
-    return s->head->next;
+    return segm->next;
 }
 
 int snake_get_size(const snake *s)

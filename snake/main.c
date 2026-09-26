@@ -1,132 +1,125 @@
-/* snake: support modern and legacy terminals, check common_types.h to
- * override ENTER */
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <curses.h>
+/* snake: support modern and legacy terminals */
+#include <stdio.h> /* prints stats */
+
+#include <stdlib.h> /* inits rand() */
+#include <time.h>   /* ------------ */
+
 #include "common_types.h"
 #include "snake.h"
 #include "tui.h"
 
-#define KEY_ESCAPE      27
-#define DELAY_TIME_EASY 130
-#define DELAY_TIME_NORM 50
-#define DELAY_TIME_HARD 30
+static int  start_game(rectangle *field, snake **head, int *delay, int size);
+static void make_snake(snake *head, int size);
+static void spawn_apple(point *apple, const snake *head, const rectangle *fld);
+static void handle_resize(rectangle *fld, snake *head, point *apple, int delay);
+static void destroy_game(snake *head);
 
 int main(void)
 {
-    /* game init */
-    snake *snake_head; /* AUTO_INIT, NULL not needed */
-    point apple, game_field;
-    int key, delay_time, i;
+    snake *head; /* AUTO_INIT, NULL not needed */
+    rectangle field;
+    point apple;
+    enum keys key;
+    int delay;
 
-    initscr();
-    start_color();
-    if (has_colors())
-        init_my_pairs();
-    cbreak();
-    noecho();
-    curs_set(0);
-    keypad(stdscr, 1);
-    srand(time(NULL));
+    start_game(&field, &head, &delay, INIT_SIZE);
 
-    getmaxyx(stdscr, game_field.y, game_field.x);
-    if (game_field.y < MIN_SIZE_WINDOW || game_field.x < MIN_SIZE_WINDOW) {
-        endwin();
-        fprintf(stderr, "Too small window. set %d+ size\n", MIN_SIZE_WINDOW);
-        return ERROR_CODE;
-    }
+    make_snake(head, INIT_SIZE);
+    spawn_apple(&apple, head, &field);
+    update_frame();
 
-    switch (start_game(&game_field, INIT_SIZE+1)) {
-    case easy:   delay_time = DELAY_TIME_EASY; break;
-    case normal: delay_time = DELAY_TIME_NORM; break;
-    case hard:   delay_time = DELAY_TIME_HARD; break;
-    default:
-        endwin();
-        fputs("main: unknonw level\n", stderr);
-        return ERROR_CODE;
-    }
-    timeout(delay_time);
-    if (snake_init(&snake_head, &game_field) == ERROR) {
-        endwin();
-        perror("snake_init");
-        return ERROR_CODE;
-    }
-    draw_char(get_head_point(snake_head), CHR_SN_HEAD, HEAD_PAIR);
-    for (i = INIT_SIZE; i > 0; i--) {
-        if (snake_lengthen(snake_head, &game_field) == ERROR) {
-            endwin();
-            fputs("snake_lengthen: impossible increment\n", stderr);
-        }
-        draw_char(get_tail_point(snake_head), CHR_SN_BODY, BODY_PAIR);
-    }
-    snake_spawn_apple(snake_head, &apple, &game_field);
-    draw_char(&apple, CHR_APPLE, APPLE_PAIR);
-
-    /* game loop */
-    while ((key = getch()) != KEY_ESCAPE && key != 'q' && key != 'Q') {
+        /* get_key() contains sleep() */
+    while ((key = get_key()) != quit) {
         point *head_p;
         switch (key) {
-        case 'w':
-        case 'W':
-        case KEY_UP:    snake_change_side(snake_head, UP);    break;
-        case 's':
-        case 'S':
-        case KEY_DOWN:  snake_change_side(snake_head, DOWN);  break;
-        case 'a':
-        case 'A':
-        case KEY_LEFT:  snake_change_side(snake_head, LEFT);  break;
-        case 'd':
-        case 'D':
-        case KEY_RIGHT: snake_change_side(snake_head, RIGHT); break;
-
-        case KEY_ENTER:
-        case ' ':
-        case 'p':
-        case 'P':
-            timeout(-1);
-            getch();
-            timeout(delay_time);
-            break;
-        case KEY_RESIZE:
-            getmaxyx(stdscr, game_field.y, game_field.x);
-            if (handle_resize(snake_head, &game_field) == ERROR) {
-                    fputs("Shit! You killed snake because small screen absorbed his"
-            " body and she die :((\n", stderr);
-                    return ERROR_CODE;
-            }
-            rebuild_game(&game_field, snake_get_size(snake_head));
-        /* case ERR and default skip */
+        case up:     snake_change_side(head, UP);    break;
+        case down:   snake_change_side(head, DOWN);  break;
+        case left:   snake_change_side(head, LEFT);  break;
+        case right:  snake_change_side(head, RIGHT); break;
+        case pause:  graphics_pause(delay);          break;
+        case resize: handle_resize(&field, head, &apple, delay); break;
+        case quit:   break;
+        case skip:   break;
         }
-        draw_char(get_head_point(snake_head), CHR_SN_BODY, BODY_PAIR);
-        draw_char(get_tail_point(snake_head), CHR_EMPTY, BG_PAIR);
-        snake_move(snake_head); /* check will be going in init game */
-        draw_char(get_head_point(snake_head), CHR_SN_HEAD, HEAD_PAIR);
 
-        move(0, 11); /* hide cursor if no colors */
-        
-        head_p = get_head_point(snake_head);
+        draw_char(get_head_point(head), CHR_SN_BODY, BODY_PAIR);
+        draw_char(get_tail_point(head), CHR_EMPTY, BG_PAIR);
+
+        snake_move(head);
+        head_p = (point *)get_head_point(head);
+        draw_char(head_p, CHR_SN_HEAD, HEAD_PAIR);
+
         if (apple.x == head_p->x && apple.y == head_p->y) {
-            if (snake_lengthen(snake_head, &game_field)) {
-                endwin();
-                fputs("snake_lengthen: impossible increment\n", stderr);
-            }
-            snake_spawn_apple(snake_head, &apple, &game_field);
-            draw_char(&apple, CHR_APPLE, APPLE_PAIR);
-            update_stats(&game_field, snake_get_size(snake_head));
+            snake_lengthen(head);
+            draw_char(get_head_point(head), CHR_SN_BODY, BODY_PAIR);
+            spawn_apple(&apple, head, &field);
+            update_stats(snake_get_size(head));
         } else 
-        if (snake_check_hit(head_p, get_after_head_segm(snake_head))
-         || snake_check_bounds(snake_head, &game_field)) {
-            end_game(&game_field, snake_get_size(snake_head), 0);
+        if (snake_check_hit(head_p, get_next_segm(get_head_segm(head))) ||
+            snake_check_bounds(head, &field))
+        {
+            end_game(&field, snake_get_size(head), 0);
             break;
         } else
-        if (snake_is_win(snake_head, &game_field)) {
-            end_game(&game_field, snake_get_size(snake_head), 1);
+        if (snake_is_win(head, &field)) {
+            end_game(&field, snake_get_size(head), 1);
             break;
         }
+
+        update_frame();
     }
 
-    endwin();
-    snake_destroy(&snake_head);
+    destroy_game(head);
     return 0;
+}
+
+static int start_game(rectangle *field, snake **head, int *delay, int size)
+{
+    int i;
+    srand(time(NULL));
+    graphics_init(field, delay, size);
+    if (!snake_init(head, field))
+        return 0;
+        
+    for (i = size; i > 0; i--)
+        snake_lengthen(*head);
+
+    return 1;
+}
+
+static void spawn_apple(point *apple, const snake *head, const rectangle *fld)
+{
+    snake_spawn_apple(head, apple, fld);
+    draw_char(apple, CHR_APPLE, APPLE_PAIR);
+}
+
+static void make_snake(snake *head, int size)
+{
+    int i;
+    segment_snake *cur_segm = (segment_snake *) get_head_segm(head);
+    draw_char(get_segment_point(cur_segm), CHR_SN_HEAD, HEAD_PAIR);
+
+    for (i = size - 1; i > 0; i--) {
+        draw_char(get_segment_point(cur_segm), CHR_SN_BODY, BODY_PAIR);
+        cur_segm = (segment_snake *)get_next_segm(cur_segm);
+    }
+}
+
+static void handle_resize(rectangle *fld, snake *head, point *apple, int delay)
+{
+    do {
+        graphics_handle_resize(fld, delay);
+        update_frame();
+    } while (snake_check_bounds(head, fld));
+    
+    rebuild_game(fld, snake_get_size(head));
+    spawn_apple(apple, head, fld);
+    make_snake(head, snake_get_size(head));
+    update_frame();
+}
+
+static void destroy_game(snake *head)
+{
+    graphics_end();
+    snake_destroy(&head);
 }
