@@ -69,7 +69,8 @@ void snake_spawn_apple(const snake *s, point *app, const rectangle *fld)
     do {
         app->x = (rand() % rgt_x) + lft_x;
         app->y = (rand() % dwn_y) + up_y;
-    } while (snake_check_hit(app, s->head->next));
+    } while (snake_check_hit(app, s->head->next) ||
+             (app->x == s->head->cur_p.x && app->y == s->head->cur_p.y));
 }
 
 int snake_check_bounds(const snake *h, const rectangle *fld) 
@@ -124,7 +125,7 @@ void snake_lengthen(snake *s)
 int snake_is_win(const snake *s, const rectangle *fld)
 {
     /* 2 is size of border in eash borders */
-    return s->length >= (fld->down_right.x-2) * (fld->down_right.y-2);
+    return s->length >= (fld->down_right.x-1) * (fld->down_right.y-1) - 1;
 }
 
 const point *get_head_point(const snake *s)

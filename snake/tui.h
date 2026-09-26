@@ -4,7 +4,7 @@
 #include "common_types.h"
 
 #define RECORD_FILE_NAME ".SNAKE_RECORD.txt"
-#define MIN_SIZE_WINDOW 15
+#define MIN_SIZE_WINDOW 10
 #define CHR_HORIZONTAL  '$'
 #define CHR_VERTICAL    '|'
 #define CHR_SN_HEAD     '@'
