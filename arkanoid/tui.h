@@ -6,7 +6,7 @@
 #include "arkanoid_conf.h"
 
 #define RECORD_FILE_NAME ".ARKANOID_biggest_record.txt"
-#define BLOK_PAIRS_COUNT 4
+
 enum api_keys { quit = 1, to_left, to_right, game_pause, resize, no_key };
 enum win_state { WIN = 1, LOSE = -1, UNKOWN = 0 };
 enum delays { 
@@ -24,8 +24,9 @@ void draw_bg(const rectangle *cup, enum game_colors_pair pair);
 void set_pause_until_not_pressed(void);
 void input_flush(void);
 void sleep_frame(int delay);
-int handle_resize(point *field, rectangle *cup);
+void handle_resize(point *field, rectangle *cup);
 void update_stats(unsigned long score, unsigned long lvl);
+void update_screen(void);
 void end_game(enum win_state is_win, point *max_xy,
               unsigned long score, unsigned long lvl);
 

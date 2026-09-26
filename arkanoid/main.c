@@ -1,5 +1,5 @@
 #include <stdio.h> /* print error messages */
-#include <stdlib.h>
+#include <stdlib.h> /* rand() */
 #include "default_structs.h"
 #include "arkanoid.h"
 #include "tui.h"
@@ -9,16 +9,9 @@ enum sides { LEFT = -1, RIGHT = +1, NONE = 0 };
 
 static void move_paddle(paddle *pad, const rectangle *cup, enum sides side);
 static void spawn_blocks(block *blocks);
-static int safety_resize(paddle *pad, ball *ba, block *blocks,
-                         point *field, rectangle *cup);
+static void safety_resize(paddle *pad, ball *ba, block *blocks,
+                          point *field, rectangle *cup);
 
-#define BRUTE_RESIZE_MACRO() \
-    if (!safety_resize(pad, pill, blocks, &game_size, &cup)){ \
-        objects_erase(pad, pill, blocks); \
-        terminate_game(); \
-        fprintf(stderr, "You broke this game. min size %d\n", MIN_TERM_SIZE); \
-        return 3; \
-    }
 int main(void)
 {
     point game_size;
@@ -31,19 +24,15 @@ int main(void)
     unsigned long score = 0, level = 1, delay;
     int need_rebuild = 0;
     while (is_win != LOSE) {
-        if(!init_game(&game_size, &cup, &delay, &need_rebuild)) {
-            terminate_game();
-            fprintf(stderr, "Size must be greater then %d\n", MIN_TERM_SIZE);
+        init_game(&game_size, &cup, &delay, &need_rebuild);
+
+        if (!objects_init(&pad, &pill, &blocks, &cup)) {
+            terminate_game(); /* OS will be killed objs automatically */
+            fputs("RAM is too small. Clear you RAM\n", stderr);
             return 1;
         }
-        if (!objects_init(&pad, &pill, &blocks, &cup)) {
-            objects_erase(pad, pill, blocks);
-            terminate_game();
-            fputs("RAM is too small. Clear you RAM\n", stderr);
-            return 2;
-        }
-        BRUTE_RESIZE_MACRO();
 
+        safety_resize(pad, pill, blocks, &game_size, &cup);
         is_win = UNKOWN;
         update_stats(score, level);
         input_flush();
@@ -55,10 +44,10 @@ int main(void)
                 input_flush();
                 set_pause_until_not_pressed();
                 break;
-            case resize: 
-                while ((key = get_key()) == resize)
-                    ; /* get final size and call resize */
-                BRUTE_RESIZE_MACRO();
+            case resize:
+                safety_resize(pad, pill, blocks, &game_size, &cup);
+                update_stats(score, level);
+                break;
             case quit:   break;
             case no_key: break;
             }
@@ -89,8 +78,10 @@ int main(void)
             if (is_win == UNKOWN) {
                 move_paddle(pad, &cup, NONE);
                 draw_rect(ball_get_ptr_rect(pill), CHR_BALL, BALL_PAIR);
-            } else
+            } else {
                 break;
+            }
+            update_screen();
         }
         objects_erase(pad, pill, blocks);
         if (key == quit)
@@ -120,17 +111,15 @@ static void spawn_blocks(block *blocks)
             }
 }
 
-static int safety_resize(paddle *pad, ball *ba, block *blocks,
+static void safety_resize(paddle *pad, ball *ba, block *blocks,
                          point *field, rectangle *cup)
 {
-    if (!handle_resize(field, cup))
-        return 0;
+    handle_resize(field, cup);
+
     rebuild_entries(pad, ba, blocks, cup);
     draw_contour(cup, CHR_BOUNDS, BORDER_PAIR);
     draw_bg(cup, BG_PAIR);
     draw_rect(paddle_get_ptr_rect(pad), CHR_PADDLE, PADDLE_PAIR);
     draw_rect(ball_get_ptr_rect(ba), CHR_BALL, BALL_PAIR);
     spawn_blocks(blocks);
-
-    return 1;
 }

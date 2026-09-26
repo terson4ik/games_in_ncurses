@@ -15,5 +15,7 @@ $(NAME_GAME): $(OBJMODULES)
 run: $(NAME_GAME)
 	./$(NAME_GAME)
 
+build: $(NAME_GAME)
+
 clean:
 	rm -f *.o $(NAME_GAME)

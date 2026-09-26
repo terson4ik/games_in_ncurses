@@ -53,9 +53,8 @@ void sleep_frame(int delay)
 void update_stats(unsigned long score, unsigned long lvl)
 {
     attrset(A_REVERSE);
-    mvprintw(0, 0, "LVL:%-4lu", lvl);
+    mvprintw(0, 0, "LVL:%-8lu", lvl);
     mvprintw(1, 0, "SCORE:%-6lu", score);
-    attroff(A_REVERSE);
 }
 
 enum api_keys get_key(void)
@@ -106,8 +105,6 @@ void draw_rect(const rectangle *r, int chr, enum game_colors_pair pair)
     for (x = r->up_left.x; x <= r->down_right.x; x++)
         for(y = r->up_left.y; y <=r->down_right.y; y++)
             mvaddch(y, x, chr);
-    move(3, 0);
-    refresh();
 }
 
 void set_pause_until_not_pressed(void)
@@ -134,8 +131,6 @@ void draw_contour(const rectangle *r, int chr, enum game_colors_pair pair)
     /* floor */
     for (x = r->up_left.x; x <= r->down_right.x; x++)
         mvaddch(r->down_right.y, x, chr);
-/* mvaddch(r->down_right.y, x, chr); */
-    refresh();
 }
 
 static void init_game_pairs(void) 
@@ -153,40 +148,52 @@ static void init_game_pairs(void)
     init_pair(BLOCK_PAIR_4,  COLOR_BLUE, COLOR_BLUE);
 }
 
-int handle_resize(point *field, rectangle *cup)
+void handle_resize(point *field, rectangle *cup)
 {
     clear();
-    getmaxyx(stdscr, field->y, field->x);
-    if (field->x < MIN_TERM_SIZE || field->y < MIN_TERM_SIZE)
-        return 0;
 
+    timeout(-1); /* block */
+    attrset(COLOR_PAIR(COMMON_PAIR));
+    while (1) {
+        getmaxyx(stdscr, field->y, field->x);
+        if (field->x < MIN_TERM_SIZE || field->y < MIN_TERM_SIZE) {
+            mvaddstr(0, 0, "SMALL SCREEN!");
+            refresh();
+            while (getch() != KEY_RESIZE) {
+            }
+        } else {
+            break;
+        }
+    }
+    timeout(0);
+    clear();
+    
     cup->up_left.x = ((field->x-AREA_WIDTH) / 2)-1;
     cup->up_left.y = 0;
     cup->down_right.x = cup->up_left.x + AREA_WIDTH+1;
     cup->down_right.y = cup->up_left.y + AREA_HEIGHT+1;
-    return 1;
 }
 
 int init_game(point *field, rectangle *cup, unsigned long *delay,
               int *is_rebuild)
 {
     if (!*is_rebuild) {
-    initscr();
-    start_color();
-    if (has_colors())
-        init_game_pairs();
-    cbreak();
-    curs_set(0);
-    noecho();
-    keypad(stdscr, 1);
-    srand(time(NULL));
-    *is_rebuild = 1;
-    *delay = DELAY_NORM;
-    } else
+        initscr();
+        start_color();
+        if (has_colors())
+            init_game_pairs();
+        cbreak();
+        curs_set(0);
+        noecho();
+        keypad(stdscr, 1);
+        srand(time(NULL));
+        *is_rebuild = 1;
+        *delay = DELAY_NORM;
+    } else {
         *delay -= NEW_LVL;
+    }
 
-    if (!handle_resize(field, cup))
-        return 0;
+    handle_resize(field, cup);
 
     timeout(0);
     /* calc cup */
@@ -195,8 +202,14 @@ int init_game(point *field, rectangle *cup, unsigned long *delay,
 
 void input_flush(void)
 {
-    while (getch() != ERR)
-        ;
+    while (getch() != ERR) {
+    }
+}
+
+void update_screen(void)
+{
+    move(3, 0);
+    refresh();
 }
 
 void end_game(enum win_state is_win, point *max_xy,
