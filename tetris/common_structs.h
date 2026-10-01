@@ -1,0 +1,6 @@
+#ifndef COMMON_STRUCTS_H_SENTRY
+#define COMMON_STRUCTS_H_SENTRY
+
+
+
+#endif
